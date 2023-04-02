@@ -1,0 +1,36 @@
+@use "../../../_base/_static/css/colors.scss";
+
+#upload_submit {
+    width      : calc(100% - 1.5rem) !important;
+    margin-left: .75rem;
+}
+
+#upload_response {
+    font-size : 18px;
+    margin-top: 8px;
+}
+
+.file-field {
+    margin: 1rem 0 !important;
+}
+
+input.file-path {
+    color        : colors.$accentSecondary;
+    border-bottom: 1px solid colors.$accentPrimary !important;
+}
+
+.btn {
+    top        : 0.8rem;
+    height     : 3rem;
+    line-height: 3rem;
+    background : colors.$accentPrimary;
+
+    &:hover {
+        background: colors.$accentPrimaryDarken;
+    }
+
+    &.disabled {
+        pointer-events: none;
+        background    : colors.$dark_light !important;
+    }
+}

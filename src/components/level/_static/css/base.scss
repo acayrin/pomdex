@@ -1,0 +1,100 @@
+@use "../../../_base/_static/css/colors.scss";
+
+#levelBtn {
+	width        : calc(25% - 1.5rem);
+	border-radius: 4px !important;
+	margin       : -.25rem .75rem !important;
+}
+
+.input-field {
+	&.no-margin {
+		margin: 0.65rem 0 !important;
+	}
+
+	input {
+		color        : colors.$accentSecondary;
+		border-radius: 0px !important;
+		appearance   : textfield;
+
+		&:focus {
+			border-bottom: 1px solid colors.$accentPrimary !important;
+			box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+		}
+	}
+
+	label.active {
+		color: colors.$accentPrimary !important;
+	}
+}
+
+.progress {
+	height    : 0;
+	transition: height .3s, margin .3s;
+}
+
+#scrollHidden {
+	transition: height .5s;
+}
+
+div.btn {
+	top        : 0.8rem;
+	height     : 3rem;
+	line-height: 3rem;
+	background : colors.$accentPrimary;
+
+	&:hover {
+		background: colors.$accentPrimaryDarken;
+	}
+
+	&.disabled {
+		pointer-events: none;
+		background    : colors.$dark_light !important;
+	}
+}
+
+pre {
+	max-height: fit-content !important;
+}
+
+select {
+	border       : none !important;
+	border-radius: 4px !important;
+	color        : colors.$accentSecondary;
+
+	&:focus {
+		border    : 1px solid colors.$accentPrimary !important;
+		box-shadow: 0 1px 0 0 colors.$accentPrimary !important;
+	}
+}
+
+.collapsible {
+	li {
+		&:nth-child(2) {
+			.collapsible-header {
+				border-top-left-radius : 4px !important;
+				border-top-right-radius: 4px !important;
+			}
+		}
+
+		&:last-child {
+			.collapsible-header {
+				border-bottom-left-radius : 4px !important;
+				border-bottom-right-radius: 4px !important;
+			}
+		}
+
+		.collapsible-body {
+			.collapsible {
+				.collapsible-header {
+					border-radius: 0 !important;
+				}
+
+				.collapsible-body {
+					td {
+						border-radius: 0 !important;
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,62 @@
+@use "../../../_base/_static/css/colors.scss";
+
+label.active {
+    color: colors.$accentPrimary !important;
+}
+
+.input-field {
+    &.no-margin {
+        margin: 1.25rem 0 0 0 !important;
+    }
+
+    input {
+        color        : colors.$accentSecondary;
+        border-radius: 0px !important;
+        appearance   : textfield;
+
+        &:focus {
+            border-bottom: 1px solid colors.$accentPrimary !important;
+            box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+        }
+    }
+}
+
+textarea {
+    font-size    : 13px !important;
+    color        : colors.$accentSecondary;
+    border-radius: 4px !important;
+
+    &:focus {
+        border-bottom: 1px solid colors.$accentPrimary !important;
+        box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+    }
+}
+
+select {
+    border       : none !important;
+    border-radius: 4px !important;
+    color        : colors.$accentSecondary;
+
+    &:focus {
+        border    : 1px solid colors.$accentPrimary !important;
+        box-shadow: 0 1px 0 0 colors.$accentPrimary !important;
+    }
+}
+
+.btn {
+    width      : calc(100% - 1.5rem) !important;
+    margin     : 0 .75rem !important;
+    top        : 0.8rem;
+    height     : 3rem;
+    line-height: 3rem;
+    background : colors.$accentPrimary;
+
+    &:hover {
+        background: colors.$accentPrimaryDarken;
+    }
+
+    &.disabled {
+        pointer-events: none;
+        background    : colors.$dark_light !important;
+    }
+}

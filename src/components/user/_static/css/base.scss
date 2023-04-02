@@ -1,0 +1,67 @@
+@use "../../../_base/_static/css/colors.scss";
+
+.input-field {
+    &.no-margin {
+        margin: 0.65rem 0 !important;
+    }
+
+    input {
+        color        : colors.$accentSecondary;
+        border-radius: 0px !important;
+        appearance   : textfield;
+
+        &:focus {
+            border-bottom: 1px solid colors.$accentPrimary !important;
+            box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+        }
+    }
+
+    label.active {
+        color: colors.$accentPrimary !important;
+    }
+}
+
+.card {
+    a {
+        color: colors.$accentPrimary !important;
+
+        &:hover {
+            color: colors.$accentPrimaryLighten !important;
+        }
+    }
+}
+
+div.btn {
+    top        : 0.8rem;
+    height     : 3rem;
+    line-height: 3rem;
+    background : colors.$accentPrimary;
+
+    &:not(.no-margin) {
+        margin-left: .75rem !important;
+    }
+
+    &:hover {
+        background: colors.$accentPrimaryDarken;
+    }
+
+    &.disabled {
+        pointer-events: none;
+        background    : colors.$dark_light !important;
+    }
+
+    &#info_submit_password, &#info_submit_info {
+        width: calc(100% - 1.5rem);
+    }
+}
+
+.red {
+    color     : colors.$red;
+    background: none !important;
+}
+
+#response_message,
+#response_message_password,
+#response_message_info {
+    margin: .5rem 0 1.25rem;
+}

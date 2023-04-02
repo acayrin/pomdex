@@ -1,0 +1,43 @@
+{
+	"name": "pomdex",
+	"description": "a Toram helper website",
+	"author": {
+		"name": "acayrin"
+	},
+	"version": "0.0.1",
+	"type": "module",
+	"license": "GPL",
+	"scripts": {
+		"start": "yarn build && node dist/index.js",
+		"build": "rm -rf dist && yarn compile && yarn copy",
+		"compile": "tsc-silent -p tsconfig.json --suppress 2552,2307@/",
+		"copy": "copyfiles -u 1 \"src/**/*.scss\" \"src/**/_static/js/**.ts\" dist/",
+		"nodemon": "nodemon"
+	},
+	"dependencies": {
+		"@hono/node-server": "^0.2.3",
+		"@materializecss/materialize": "^1.2.2",
+		"cheerio": "^1.0.0-rc.12",
+		"colors": "^1.4.0",
+		"critters": "^0.0.16",
+		"esbuild": "^0.17.11",
+		"fast-sort": "^3.2.1",
+		"fastq": "^1.15.0",
+		"git-repo-info": "^2.1.1",
+		"hono": "latest",
+		"ky": "^0.33.3",
+		"mongodb": "^5.1.0",
+		"sass": "^1.59.2",
+		"snappy": "^7.2.2",
+		"workerpool": "^6.4.0"
+	},
+	"devDependencies": {
+		"@types/workerpool": "^6.4.0",
+		"copyfiles": "^2.4.1",
+		"dotenv": "^16.0.3",
+		"nodemon": "^2.0.21",
+		"tsc-silent": "^1.2.2",
+		"tsx": "^3.12.2",
+		"typescript": "^5.0.2"
+	}
+}

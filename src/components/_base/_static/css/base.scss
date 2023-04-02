@@ -1,0 +1,185 @@
+@use "./colors.scss";
+@import url("https://api.fonts.coollabs.io/css2?family=Rajdhani&display=swap");
+
+*:not(td) {
+	border-radius: 8px !important;
+}
+
+html {
+	background : colors.$dark_light;
+	font-family: Radjhani;
+	color      : colors.$accentSecondary;
+}
+
+pre {
+	display   : block;
+	overflow  : auto;
+	max-height: 200px;
+	padding   : 12px;
+	background: colors.$dark_dark;
+}
+
+code {
+	color: colors.$red;
+}
+
+ul.nav {
+	.collapsible-header {
+		color           : colors.$accentPrimary;
+		padding         : 1rem .5rem;
+		background-color: colors.$dark_norm;
+
+		&:hover {
+			color           : colors.$accentPrimaryLighten;
+			padding         : 1rem;
+			background-color: colors.$dark_light;
+		}
+	}
+
+	.btn-flat {
+		padding: 0;
+	}
+
+	li .collapsible-header {
+		color    : colors.$accentPrimary;
+		font-size: large !important;
+	}
+}
+
+table {
+	border-radius: 4px;
+
+	tr {
+		td {
+			padding: 1rem .4rem;
+		}
+
+		&:first-child {
+			td:first-child {
+				border-top-left-radius: 4px !important;
+			}
+
+			td:last-child {
+				border-top-right-radius: 4px !important;
+			}
+		}
+
+		&:last-child {
+			td:first-child {
+				border-bottom-left-radius: 4px !important;
+			}
+
+			td:last-child {
+				border-bottom-right-radius: 4px !important;
+			}
+		}
+	}
+
+	&.striped tbody tr:nth-child(odd) {
+		background-color: transparent;
+
+		td {
+			background-color: colors.$dark_light;
+		}
+	}
+}
+
+.card {
+	background: colors.$dark_norm;
+
+	.card-content {
+		color: colors.$accentSecondary;
+	}
+
+	.card-action {
+		color: colors.$accentSecondary;
+
+		a {
+			color: colors.$accentSecondary;
+		}
+	}
+}
+
+.collapsible {
+	margin: 0;
+
+	.collapsible-body {
+		margin-left: 1rem;
+	}
+
+	li.active {
+		border-right: 1px solid colors.$accentPrimary;
+
+		&>.collapsible-header:first-child {
+			b {
+				color: colors.$accentPrimary;
+			}
+		}
+	}
+}
+
+.collapsible-header {
+	transition: background .2s, color .2s;
+	background: colors.$dark_light;
+	color     : colors.$accentSecondary;
+
+	b {
+		transition: color .2s;
+	}
+
+	&:hover {
+		background-color: colors.$dark_norm;
+	}
+}
+
+.collapsible,
+.collapsible-header,
+.collapsible-body {
+	box-shadow   : none;
+	border       : none !important;
+	border-radius: 0 !important;
+}
+
+.collapsible-body {
+	padding: 0 !important;
+}
+
+.color-block {
+	display      : inline-block;
+	width        : 18px;
+	height       : 18px;
+	border-radius: 0 !important;
+	line-height  : 20px;
+	color        : colors.$dark_dark;
+	text-align   : center;
+}
+
+.hidden {
+	display: none;
+}
+
+.input-field {
+	margin: 0.65rem !important;
+
+	i {
+		line-height: 50px;
+	}
+
+	input[type="search"] {
+		height    : 50px !important;
+		background: colors.$dark_norm !important;
+		color     : colors.$accentSecondary;
+	}
+}
+
+.animate {
+	transition: all 0.5s ease !important;
+}
+
+.fadeIn {
+	opacity: 1;
+}
+
+.fadeOut {
+	opacity: 0;
+}

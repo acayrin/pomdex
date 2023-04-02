@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"jsxImportSource": "hono/jsx",
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "node16",
+		"removeComments": true,
+		"downlevelIteration": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+		"outDir": "./dist",
+		"pretty": true
+	},
+	"include": ["src"],
+	"exclude": ["node_modules", "src/**/_static/js/**.ts"]
+}
