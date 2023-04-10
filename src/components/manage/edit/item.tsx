@@ -1,4 +1,4 @@
-import { ToramItem } from "../../../modules/_types/item.js";
+import { ToramItem } from "../../../modules/types/ToramItem.js";
 
 export const ManageEditItem = (props: { entry?: ToramItem }) => {
 	const { entry } = props;
@@ -18,7 +18,7 @@ export const ManageEditItem = (props: { entry?: ToramItem }) => {
 					<input
 						id="edit_item_proc"
 						type="text"
-						value={entry?.proc}
+						value={`${entry?.proc?.type} ${entry?.proc?.amount}`}
 					/>
 					<label for="edit_item_proc">Process</label>
 				</div>
@@ -37,13 +37,13 @@ export const ManageEditItem = (props: { entry?: ToramItem }) => {
 						Stat List
 						<br />
 						<p>
-							Format: <span style="color:white">(Stat_name Amount)</span>
+							Format: <span style="color:white">(Stat_name | Amount)</span>
 						</p>
 					</label>
 					<textarea
 						id="edit_item_stats"
 						class="materialize-textarea">
-						{entry?.stats?.map((stat) => `${stat}\n`)}
+						{entry?.stats?.map((stat) => `${stat.name} | ${stat.val}\n`)}
 					</textarea>
 				</div>
 			</div>

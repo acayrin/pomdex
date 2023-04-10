@@ -1,23 +1,32 @@
 import { Context } from "hono";
 import { BaseAccountInfo } from "../../components/user/info.js";
 import { Base } from "../../components/_base/base.js";
-import { PomdexAccounts } from "../../modules/database/init.js";
+import { PomdexAccounts } from "../../modules/database/index.js";
 
-export default async (c: Context) => {
-	if (!c.req.cookie("pomdexAccount")) {
-		return c.redirect("/user/login");
-	}
+export default (c: Context) =>
+	new Promise((res, rej) => {
+		if (!c.req.cookie("pomdexAccount")) {
+			res(c.redirect("/user/login", 403));
+		}
 
-	const account = await PomdexAccounts.findOne({ token: c.req.cookie("pomdexAccount") });
-	if (!account) {
-		return c.redirect("/user/login");
-	}
-
-	account.token = undefined;
-
-	return c.html(
-		<Base title="Login">
-			<BaseAccountInfo account={account} />
-		</Base>
-	);
-};
+		PomdexAccounts.findOne(
+			{ token: c.req.cookie("pomdexAccount") },
+			{
+				projection: {
+					token: 0,
+				},
+			}
+		)
+			.then((account) =>
+				res(
+					c.html(
+						<Base
+							title="Login"
+							path={c.req.path}>
+							<BaseAccountInfo account={account} />
+						</Base>
+					)
+				)
+			)
+			.catch(rej);
+	});

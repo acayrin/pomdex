@@ -1,0 +1,21 @@
+.color-block {
+    display      : inline-block;
+    width        : 18px;
+    height       : 18px;
+    border-radius: 0 !important;
+    line-height  : 20px;
+    color        : var(--color-light-darken);
+    text-align   : center;
+}
+
+.dye-table {
+    margin: 0 !important;
+}
+
+table tr td {
+    padding: 0;
+}
+
+.capitalize {
+    text-transform: capitalize;
+}

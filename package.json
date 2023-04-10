@@ -4,31 +4,31 @@
 	"author": {
 		"name": "acayrin"
 	},
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
-	"license": "GPL",
+	"license": "GPL-3.0",
 	"scripts": {
 		"start": "yarn build && node dist/index.js",
 		"build": "rm -rf dist && yarn compile && yarn copy",
-		"compile": "tsc-silent -p tsconfig.json --suppress 2552,2307@/",
-		"copy": "copyfiles -u 1 \"src/**/*.scss\" \"src/**/_static/js/**.ts\" dist/",
+		"compile": "tsc-silent -p tsconfig.json --suppress 2552,2307,1479@/",
+		"copy": "copyfiles -u 1 \"src/**/*.scss\" \"src/**/_static/js/**.ts\" \"src/**/_static/js/**.tsx\" dist/",
 		"nodemon": "nodemon"
 	},
 	"dependencies": {
 		"@hono/node-server": "^0.2.3",
 		"@materializecss/materialize": "^1.2.2",
+		"@types/async": "^3.2.18",
+		"async": "^3.2.4",
 		"cheerio": "^1.0.0-rc.12",
 		"colors": "^1.4.0",
 		"critters": "^0.0.16",
-		"esbuild": "^0.17.11",
-		"fast-sort": "^3.2.1",
-		"fastq": "^1.15.0",
+		"esbuild": "^0.17.x",
 		"git-repo-info": "^2.1.1",
 		"hono": "latest",
+		"iconify-icon": "^1.0.7",
 		"ky": "^0.33.3",
-		"mongodb": "^5.1.0",
+		"mongodb": "^5.x",
 		"sass": "^1.59.2",
-		"snappy": "^7.2.2",
 		"workerpool": "^6.4.0"
 	},
 	"devDependencies": {

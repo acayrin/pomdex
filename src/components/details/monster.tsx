@@ -1,72 +1,139 @@
-import { html } from "hono/html";
-import { bestColor, Color, invertHex } from "../../modules/color/index.js";
-import { search } from "../../modules/search/query.js";
-import { ToramMonster } from "../../modules/_types/monster.js";
+import { ColorMapping, getInvertedColor } from "../../modules/color/index.js";
+import { PomdexMonthlyDye } from "../../modules/database/index.js";
+import Search from "../../modules/search/query.js";
+import { ToramMonster } from "../../modules/types/ToramMonster.js";
+import { getElementColor } from "../../modules/utils/getElementColor.js";
+import { getItemTypeIcon } from "../../modules/utils/getItemTypeIcon.js";
 
-export const MonsterDetails = async (props: { item: ToramMonster }) => (
-	<>
-		<p>
-			<b>Type:</b> {props.item.type}
-		</p>
-		<p>
-			<b>Map:</b>{" "}
-			<a href={html`/details/${props.item.map}`}>
-				{(await search(props.item.map, true)).list.pop()?.name || props.item.map}
-			</a>
-		</p>
-		<p>
-			<b>Level:</b> {props.item.level || "N/A"}
-		</p>
-		<p>
-			<b>HP:</b> {props.item.hp || "N/A"}
-		</p>
-		<p>
-			<b>Element:</b> {props.item.ele || "N/A"}
-		</p>
-		<p>
-			<b>EXP:</b> {props.item.exp || "N/A"}
-		</p>
-		<p>
-			<b>Tamable:</b> {props.item.tamable || "N/A"}
-		</p>
-		{props.item.drops?.length > 0 && (
-			<>
-				<p>
-					<b>Drops:</b>
-				</p>
-				<table class="striped no-padding">
-					<tbody>
-						{await Promise.all(
-							props.item.drops?.map(async (drop) => {
-								const dropItem = (await search(drop.id, true)).list.pop();
+export const MonsterDetails = async (props: { item: ToramMonster }) => {
+	const { item } = props;
+	const monthlyDyeEntry = (
+		await PomdexMonthlyDye.findOne({
+			$and: [
+				{
+					list: {
+						$elemMatch: {
+							name: {
+								$regex: new RegExp(item.name, "gi"),
+							},
+						},
+					},
+				},
+				{
+					month: new Date().getMonth(),
+				},
+			],
+		})
+	)?.list.find((entry) => new RegExp(item.name, "gi").test(entry.name));
 
-								return (
-									<tr>
-										<td>
-											<a href={dropItem ? `/details/${drop.id}` : "#"}>
-												{dropItem?.name || drop.id}
-											</a>
-										</td>
-										<td>{dropItem?.type || "Unknown"}</td>
-										<td>
-											{drop.dyes?.map((dye) => (
-												<span
-													class="color-block"
-													style={[
-														`background: #${Color.get(Number(dye))}`,
-														`color: #${invertHex(Color.get(Number(dye)))}`,
-													].join(";")}>
-													<b>{dye}</b>
-												</span>
-											))}
-										</td>
-									</tr>
-								);
-							})
-						)}
-					</tbody>
-				</table>
-			</>
-		)}
-	</>
-);
+	return (
+		<div class="row">
+			<div class="item-stat col s6">
+				<b>Type:</b>
+				<div>
+					{getItemTypeIcon(item.type)}
+					{item.type}
+				</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Spawn location:</b>
+				<div>
+					{getItemTypeIcon("Map")}
+					<a href={item.map === "Event" ? "#" : `/details/${item.map}`}>
+						{(await Search.query(item.map, true)).list.at(0)?.name || item.map}
+					</a>
+				</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Level:</b>
+				<div>{item.level || "Unknown"}</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Hitpoints:</b>
+				<div>{item.hp ? item.hp.toLocaleString() : "Unknown"}</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Element:</b>
+				<div style={`color:${getElementColor(item.ele)}`}>
+					{getItemTypeIcon("element")}
+					{item.ele || "Unknown"}
+				</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Base EXP drop:</b>
+				<div>{item.exp ? item.exp.toLocaleString() : "Unknown"}</div>
+			</div>
+
+			<div class="item-stat col s6">
+				<b>Is tamable:</b>
+				<div>{item.tamable || "Unknown"}</div>
+			</div>
+
+			{monthlyDyeEntry && (
+				<div class="item-stat col s6">
+					<b>Monthly dye drop:</b>
+					<div>
+						{["A", "B", "C"].map((slot, index) => {
+							const code: any =
+								monthlyDyeEntry.slot === slot
+									? monthlyDyeEntry.code
+									: index === 0
+									? "A"
+									: index === 1
+									? "B"
+									: "C";
+							return (
+								<span
+									class="color-block"
+									style={[
+										`background: #${ColorMapping.get(code)}`,
+										`color: #${getInvertedColor(ColorMapping.get(code))}`,
+									].join(";")}>
+									<b>{code}</b>
+								</span>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			{item.drops?.length > 0 && (
+				<div class="item-stat col s12">
+					<b>Obtainable items:</b>
+					{await Promise.all(
+						item.drops?.map(async (drop) => {
+							const dropItem = (await Search.query(drop.id, true)).list.pop();
+
+							return (
+								<div class="col s12">
+									<div class="col s6">
+										{getItemTypeIcon(dropItem.type)}
+										<a href={dropItem ? `/details/${drop.id}` : "#"}>{dropItem?.name || drop.id}</a>
+									</div>
+									<div class="col s3">{dropItem?.type || "Unknown"}</div>
+									<div class="col s3">
+										{drop.dyes?.map((dye) => (
+											<span
+												class="color-block"
+												style={[
+													`background: #${ColorMapping.get(Number(dye))}`,
+													`color: #${getInvertedColor(ColorMapping.get(Number(dye)))}`,
+												].join(";")}>
+												<b>{dye}</b>
+											</span>
+										))}
+									</div>
+								</div>
+							);
+						})
+					)}
+				</div>
+			)}
+		</div>
+	);
+};

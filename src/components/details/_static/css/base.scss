@@ -1,5 +1,7 @@
 .card-display-item {
     .row {
+        margin: 0;
+
         .col {
             padding: 0;
         }
@@ -11,5 +13,33 @@
                 padding: 0;
             }
         }
+    }
+}
+
+.color-block {
+    display      : inline-block;
+    width        : 18px;
+    height       : 18px;
+    border-radius: 0 !important;
+    line-height  : 20px;
+    color        : var(--color-light-darken);
+    text-align   : center;
+}
+
+.progress {
+    background-color: var(--color-accent) !important;
+
+    .indeterminate {
+        background-color: var(--color-accent-darken) !important;
+    }
+}
+
+.item-stat {
+    >div {
+        padding-left: 1rem !important;
+    }
+
+    .item-stat {
+        padding-left: 1rem !important;
     }
 }

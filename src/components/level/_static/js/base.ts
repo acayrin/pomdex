@@ -1,9 +1,8 @@
-import { GuideResult } from "../../../../modules/leveling/types/levelGuide.js";
+import { GuideResultSuccess } from "../../../../modules/leveling/types/index.js";
 
-var M = M || {};
-const limit = 10;
+const levelGuideDisplayLimit = 10;
 
-document.addEventListener("DOMContentLoaded", (_) => {
+{
 	const elems = {
 		levelStart: document.getElementById("level_start") as HTMLInputElement,
 		levelEnd: document.getElementById("level_end") as HTMLInputElement,
@@ -50,7 +49,7 @@ document.addEventListener("DOMContentLoaded", (_) => {
 			].join(" ")
 		)
 			.then((res) => res.json())
-			.then(async (guide: GuideResult) => {
+			.then(async (guide: GuideResultSuccess) => {
 				setTimeout(() => {
 					elems.progress.style.height = "0";
 					elems.progress.style.margin = "0";
@@ -77,17 +76,15 @@ document.addEventListener("DOMContentLoaded", (_) => {
 											.replace(/\%3/gi, range.bonusExp.toString());
 						});
 
-						const listBoss = range.boss?.slice(0, limit);
+						const listBoss = range.boss?.slice(0, levelGuideDisplayLimit);
 						if (listBoss.length > 0) {
 							const preservedEntry = listBoss.find((entry) => entry.preserve);
 							if (guide.pr && preservedEntry) {
-								// @ts-ignore
 								listBoss[listBoss.indexOf(preservedEntry)] = undefined;
 								listBoss.unshift(preservedEntry);
 							}
 							listBoss.forEach((e_boss) => {
 								if (!e_boss) return;
-								// @ts-ignore
 								base.getElementsByClassName("p_level_boss").item(0).innerHTML += [
 									"<tr>",
 									`<td><a href="/details/${e_boss.id}">${e_boss.name}</a>${
@@ -100,11 +97,10 @@ document.addEventListener("DOMContentLoaded", (_) => {
 								].join("");
 							});
 						} else {
-							// @ts-ignore
 							base.getElementsByClassName("p_level_boss_wrap").item(0).innerHTML = "";
 						}
 
-						const listMini = range.mini?.slice(0, limit);
+						const listMini = range.mini?.slice(0, levelGuideDisplayLimit);
 						if (listMini.length > 0) {
 							const preservedEntry = listMini.find((entry) => entry.preserve);
 							if (guide.pr && preservedEntry) {
@@ -114,7 +110,6 @@ document.addEventListener("DOMContentLoaded", (_) => {
 							}
 							listMini.forEach((e_mini) => {
 								if (!e_mini) return;
-								// @ts-ignore
 								base.getElementsByClassName("p_level_mini").item(0).innerHTML += [
 									"<tr>",
 									`<td><a href="/details/${e_mini.id}">${e_mini.name}</a>${
@@ -127,11 +122,10 @@ document.addEventListener("DOMContentLoaded", (_) => {
 								].join("");
 							});
 						} else {
-							// @ts-ignore
 							base.getElementsByClassName("p_level_mini_wrap").item(0).innerHTML = "";
 						}
 
-						const listNorm = range.mons?.slice(0, limit);
+						const listNorm = range.mons?.slice(0, levelGuideDisplayLimit);
 						if (listNorm.length > 0) {
 							const preservedEntry = listNorm.find((entry) => entry.preserve);
 							if (guide.pr && preservedEntry) {
@@ -154,25 +148,23 @@ document.addEventListener("DOMContentLoaded", (_) => {
 								].join("");
 							});
 						} else {
-							// @ts-ignore
 							base.getElementsByClassName("p_level_norm_wrap").item(0).innerHTML = "";
 						}
 
 						if (listBoss.length > 0 || listMini.length > 0 || listNorm.length > 0) {
-							// @ts-ignore
 							elems.levelGuide.getElementsByTagName("ul").item(0).appendChild(base);
 
+							// @ts-ignore
 							M.AutoInit();
 						}
 					});
 
 					elems.scroll.style.height = `${elems.levelGuide.clientHeight}px`;
 					setTimeout((_) => {
-						// @ts-ignore
 						elems.scroll.style.all = null;
 						elems.levelBtn.classList.remove("disabled");
 					}, 300);
 				}, 350);
 			});
 	});
-});
+}

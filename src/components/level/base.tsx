@@ -1,11 +1,32 @@
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Precompile } from "../../modules/precompile/index.js";
+import Toram from "../../toram.json" assert { type: "json" };
 import { Helmet } from "../_base/helmet.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const BaseLevel = () => (
 	<div class="col s12">
+		<div class="card">
+			<div class="card-content">
+				<span class="card-title">Leveling Guide (Cap: {Toram.leveling.levelCap})</span>
+				<p>
+					These results are based purely on numbers, this does not guarentee you to get a party at the
+					corresponding boss location.
+				</p>
+				<br />
+				<p>
+					Exp bonus is calculated by <b>stacking every 30-level milestone emblem bonuses</b> (assuming that
+					the player has it), sum with <b>50%</b> from daily bonuses. Any value in <b>"Exp Bonus %"</b> box
+					will override the daily bonus exp.
+				</p>
+				<br />
+				<p>
+					The <b>count</b> column indicates the amount of battle/monster to defeat between{" "}
+					<b>with and without Exp bonuses applied</b>
+				</p>
+			</div>
+		</div>
 		<div class="card">
 			<div class="card-content">
 				<div class="row">
@@ -53,7 +74,7 @@ export const BaseLevel = () => (
 						<label for="level_filter">Filter by</label>
 						<select
 							id="level_filter"
-							class="browser-default grey darken-4">
+							class="browser-default">
 							<option
 								value=""
 								selected>
@@ -72,7 +93,7 @@ export const BaseLevel = () => (
 						<label for="level_preserve">Preserve</label>
 						<select
 							id="level_preserve"
-							class="browser-default grey darken-4">
+							class="browser-default">
 							<option
 								value=""
 								selected>
@@ -90,7 +111,7 @@ export const BaseLevel = () => (
 						<label for="level_include_events">Include Events</label>
 						<select
 							id="level_include_events"
-							class="browser-default grey darken-4">
+							class="browser-default">
 							<option
 								value=""
 								selected>
@@ -100,8 +121,8 @@ export const BaseLevel = () => (
 						</select>
 					</div>
 				</div>
-				<div class="progress light-blue">
-					<div class="indeterminate light-blue darken-4" />
+				<div class="progress">
+					<div class="indeterminate" />
 				</div>
 				<div id="scrollHidden">
 					<div id="levelGuide">
@@ -119,7 +140,9 @@ export const BaseLevel = () => (
 									<ul class="collapsible">
 										<li class="p_level_boss_wrap">
 											<div class="collapsible-header hoverable">
-												<b>Boss</b>
+												<div class="col s12">
+													<b>Boss</b>
+												</div>
 											</div>
 											<div class="collapsible-body">
 												<table class="striped no-padding">
@@ -144,7 +167,9 @@ export const BaseLevel = () => (
 										</li>
 										<li class="p_level_mini_wrap">
 											<div class="collapsible-header hoverable">
-												<b>Miniboss</b>
+												<div class="col s12">
+													<b>Miniboss</b>
+												</div>
 											</div>
 											<div class="collapsible-body">
 												<table class="striped no-padding">
@@ -169,7 +194,9 @@ export const BaseLevel = () => (
 										</li>
 										<li class="p_level_norm_wrap">
 											<div class="collapsible-header hoverable">
-												<b>Normal monster</b>
+												<div class="col s12">
+													<b>Normal monster</b>
+												</div>
 											</div>
 											<div class="collapsible-body">
 												<table class="striped no-padding">
@@ -198,26 +225,6 @@ export const BaseLevel = () => (
 						</ul>
 					</div>
 				</div>
-			</div>
-		</div>
-		<div class="card">
-			<div class="card-content">
-				<span class="card-title">Note</span>
-				<p>
-					These results are based purely on numbers, this does not guarentee you to get a party at the
-					corresponding boss location.
-				</p>
-				<br />
-				<p>
-					Exp bonus is calculated by <b>stacking every 30-level milestone emblem bonuses</b> (assuming that
-					the player has it), sum with <b>50%</b> from daily bonuses. Any value in <b>"Exp Bonus %"</b> box
-					will override the daily bonus exp.
-				</p>
-				<br />
-				<p>
-					The <b>count</b> column indicates the amount of battle/monster to defeat between{" "}
-					<b>with and without Exp bonuses applied</b>
-				</p>
 			</div>
 		</div>
 		<style>{Precompile.sass(join(__dirname, "./_static/css/base.scss"))}</style>

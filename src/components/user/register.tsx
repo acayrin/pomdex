@@ -69,7 +69,8 @@ export const BaseRegister = () => (
 				</div>
 			</div>
 		</div>
-		<style>{Precompile.sass(join(__dirname, "./_static/css/base.scss"))}</style>
+
+		<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/base.scss"))}</Helmet.styles.Push>
 		<Helmet.scripts.Push>{Precompile.typescript(join(__dirname, "./_static/js/register.ts"))}</Helmet.scripts.Push>
 		<Helmet.scripts.Push>{Precompile.typescript(join(__dirname, "./_static/js/crypto.ts"))}</Helmet.scripts.Push>
 	</div>

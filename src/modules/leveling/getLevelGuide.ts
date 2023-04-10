@@ -1,20 +1,18 @@
-import fsort from "fast-sort";
 import zlib from "zlib";
 import * as Toram from "../../toram.json" assert { type: "json" };
+import { ToramMonster } from "../types/ToramMonster.js";
 import Utils from "../utils/index.js";
-import { ToramMonster } from "../_types/monster.js";
 import { calculateExpBonus } from "./calculateBonusExp.js";
 import { calculateExpAmount } from "./calculateExpAmount.js";
-import { getMonsterLevelInfo, getMonsterList } from "./getMonsterList.js";
-import { GuideLevelModel, GuideResultListEntry, GuideResultListEntryItem, GuideResults } from "./types/levelGuide.js";
-const { sort } = fsort;
+import { getMonsterInfoByLevel, getMonsterListOfLevel } from "./getMonsterList.js";
+import { GuideLevelModel, GuideResult, GuideResultListEntry, GuideResultListEntryItem } from "./types/index.js";
 
 // store monster/battle data per level - level model
 const pomieLevelModels: { [key: number]: Buffer } = {};
 const monsterTypes = ["boss", "mini", "mons"];
 
 /**
- * generates a leveling guide based on given arguments
+ * Generates a leveling guide based on given arguments
  *   args: <start_level> [dest_level] [--aditional args]
  *
  *      - start_level: starting level
@@ -30,28 +28,27 @@ const monsterTypes = ["boss", "mini", "mons"];
  *          -nm/--nightmare: filter to nightmare bosses only
  *          -u/--ultimate: filter to ultimate bosses only
  * 			-pr/--preserve: set amount of level difference before splitting level range for highest ranked monster
+ * 			-ev/--event: show/hide event-limited monsters
+ * 			-lm/--level-limit: limit exp bonus by player's highest character level
  * @param {String} args arguments
  * @returns Object containing leveling guide
  */
-export const getLevelGuide = async (args: string): Promise<GuideResults> => {
-	/** ==========================================================================================
-	 * TODO pre main task
-	 */
-
+export const getLevelGuide = async (args: string): Promise<GuideResult> => {
+	// [ TASK 1 ]===================================================================================
 	// missing arguments
 	if (!args) {
 		return {
 			type: 3,
-			err: "Missing arguments",
+			error: "Missing arguments",
 		};
 	}
 
 	// basic guide variables
 	let guideBonus: number;
 	let guideFilter: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-	let guidePrivate = false;
 	let guidePreserveRanking: number;
 	let guideIncludeEvents = false;
+	let guidePlayerMaxLevel: number = undefined;
 	let skipCache = false;
 	// level mapping, store as
 	// key: <Level num>
@@ -74,7 +71,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 	}
 
 	// array of levels
-	const levels = Utils.range(startLevel, endLevel + 1);
+	const levelArray = Utils.range(startLevel, endLevel + 1);
 
 	// filter through arguments and assign values
 	const partials = args.split(" ");
@@ -116,9 +113,6 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			case "--mob":
 				guideFilter = 7;
 				break;
-			case "-pm":
-				guidePrivate = true;
-				break;
 			case "-ev":
 			case "--event":
 				guideIncludeEvents = true;
@@ -131,19 +125,25 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 				}
 				break;
 			}
+			case "-lm":
+			case "--level-limit": {
+				const value = partials[partials.indexOf(partial) + 1];
+				if (value && !Number.isNaN(value)) {
+					guidePlayerMaxLevel = Number(value);
+				}
+				break;
+			}
+			// hidden option
 			case "--skip-cache": {
 				skipCache = true;
 			}
-			default:
-			// empty
 		}
 	}
 
 	// base guide result
-	const guideResult: GuideResults = {
+	const guideResult: GuideResult = {
 		type: 2,
 		pr: guidePreserveRanking,
-		pm: guidePrivate,
 		startLevel,
 		endLevel,
 		totalExp: calculateExpAmount(startLevel, endLevel),
@@ -151,10 +151,10 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 		list: [],
 	};
 
-	/** =========================================================================================
-	 * generate a model per level and assign to base map
+	/** [ TASK 2 ]=====================================================================================
+	 * Generate a model per level and assign to base map
 	 */
-	for (const level of levels) {
+	for (const level of levelArray) {
 		let levelModel: GuideLevelModel = {
 			boss: [],
 			mini: [],
@@ -167,9 +167,10 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			levelModel = JSON.parse(zlib.gunzipSync(pomieLevelModels[level], { level: 9 }).toString());
 		} else {
 			// get current level exp bonus
-			const currentLevelBonus = (guideBonus || 0) + calculateExpBonus(level, guideBonus === undefined);
+			const currentLevelBonus =
+				(guideBonus || 0) + calculateExpBonus(level, guidePlayerMaxLevel, guideBonus === undefined);
 			// get current level mob list
-			const currentLevelList = await getMonsterList(level, currentLevelBonus);
+			const currentLevelList = await getMonsterListOfLevel(level, currentLevelBonus);
 
 			// get current level mob entries
 			for (const entry of currentLevelList) {
@@ -247,7 +248,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 		levelMap[level] = levelModel;
 	}
 
-	/** =========================================================================================
+	/** [ DATA STORE ]===============================================================================
 	 * store data per level range
 	 * reset when condition(s) are met
 	 */
@@ -297,13 +298,12 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 		},
 	};
 
-	/** =========================================================================================
-	 * TODO: MAIN HEAVY WORK here
-	 * loop through all the levels
+	/** [ MAIN ]===================================================================================
+	 * Loop through all the levels
 	 * and stack up data if nothing changes accordingly or
 	 * split up and assign accumulated data to guide results
 	 */
-	for (const level of levels) {
+	for (const level of levelArray) {
 		// current level data
 		const currentLevel = {
 			// level number
@@ -311,7 +311,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			// level monster data
 			levelModel: levelMap[level],
 			// level exp bonus %
-			levelExpBonus: (guideBonus || 0) + calculateExpBonus(level, guideBonus === undefined),
+			levelExpBonus: (guideBonus || 0) + calculateExpBonus(level, undefined, guideBonus === undefined),
 		};
 
 		// next level data
@@ -321,7 +321,8 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			// level monster data
 			levelModel: levelMap[level + 1],
 			// level exp bonus %
-			levelExpBonus: (guideBonus || 0) + calculateExpBonus(level + 1, guideBonus === undefined),
+			levelExpBonus:
+				(guideBonus || 0) + calculateExpBonus(level + 1, guidePlayerMaxLevel, guideBonus === undefined),
 		};
 
 		// if next level data doesn't exist, ignore
@@ -335,7 +336,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			// since each level model stays the same, only diff is the exp bonus applies to it
 			const battleCountWithBonusBase = Math.ceil(
 				calculateExpAmount(level) /
-					getMonsterLevelInfo(monster as unknown as ToramMonster, level, currentLevel.levelExpBonus)
+					getMonsterInfoByLevel(monster as unknown as ToramMonster, level, currentLevel.levelExpBonus)
 						.expWithBonus
 			);
 
@@ -385,7 +386,9 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 			differentLevel: currentLevel.asNumber !== levelRangeData.fixedLevel,
 
 			// if 2 levels have different exp bonus
-			differentExpBonus: calculateExpBonus(currentLevel.asNumber) !== calculateExpBonus(nextLevel.asNumber),
+			differentExpBonus:
+				calculateExpBonus(currentLevel.asNumber, guidePlayerMaxLevel) !==
+				calculateExpBonus(nextLevel.asNumber, guidePlayerMaxLevel),
 
 			// if current loop is at last level
 			atLastLevel: currentLevel.asNumber + 1 === endLevel,
@@ -422,7 +425,9 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 		// final level range result
 		const levelRangeResult: GuideResultListEntry = {
 			// bonus exp % applied to this range
-			bonusExp: (guideBonus || 0) + calculateExpBonus(currentLevel.asNumber, guideBonus === undefined),
+			bonusExp:
+				(guideBonus || 0) +
+				calculateExpBonus(currentLevel.asNumber, guidePlayerMaxLevel, guideBonus === undefined),
 
 			// starting level of this range
 			startLevel: levelRangeData.fixedLevel,
@@ -475,7 +480,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 						)) ||
 					// included in ignored map list
 					(!guideIncludeEvents &&
-						Toram.default.leveling.ignoredList.byMap.some((map) => map.toUpperCase().includes(entry.map)))
+						Toram.default.leveling.ignoredList.byMap.some((map) => new RegExp(map, "i").test(entry.map)))
 				) {
 					continue;
 				}
@@ -483,7 +488,7 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 				sanitizedArray.push(entry);
 			}
 
-			levelRangeResult[type] = sort(sanitizedArray as GuideResultListEntryItem[]).asc((entry) => entry.count);
+			levelRangeResult[type] = sanitizedArray.sort((r1, r2) => r1.count - r2.count);
 		}
 
 		// push sanitized result to list;
@@ -503,6 +508,5 @@ export const getLevelGuide = async (args: string): Promise<GuideResults> => {
 
 	// return final guide result
 	return guideResult;
-	// END
-	// ==========================================================================================
+	// [ END ]===================================================================================
 };

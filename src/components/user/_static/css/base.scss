@@ -1,32 +1,30 @@
-@use "../../../_base/_static/css/colors.scss";
-
 .input-field {
     &.no-margin {
         margin: 0.65rem 0 !important;
     }
 
     input {
-        color        : colors.$accentSecondary;
+        color        : var(--color-light);
         border-radius: 0px !important;
         appearance   : textfield;
 
         &:focus {
-            border-bottom: 1px solid colors.$accentPrimary !important;
-            box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+            border-bottom: 1px solid var(--color-accent) !important;
+            box-shadow   : 0 1px 0 0 var(--color-accent) !important;
         }
     }
 
     label.active {
-        color: colors.$accentPrimary !important;
+        color: var(--color-accent) !important;
     }
 }
 
 .card {
     a {
-        color: colors.$accentPrimary !important;
+        color: var(--color-accent) !important;
 
         &:hover {
-            color: colors.$accentPrimaryLighten !important;
+            color: var(--color-accent-lighten) !important;
         }
     }
 }
@@ -35,28 +33,29 @@ div.btn {
     top        : 0.8rem;
     height     : 3rem;
     line-height: 3rem;
-    background : colors.$accentPrimary;
+    background : var(--color-accent);
 
     &:not(.no-margin) {
         margin-left: .75rem !important;
     }
 
     &:hover {
-        background: colors.$accentPrimaryDarken;
+        background: var(--color-accent-darken);
     }
 
     &.disabled {
         pointer-events: none;
-        background    : colors.$dark_light !important;
+        background    : var(--color-dark-lighten) !important;
     }
 
-    &#info_submit_password, &#info_submit_info {
+    &#info_submit_password,
+    &#info_submit_info {
         width: calc(100% - 1.5rem);
     }
 }
 
 .red {
-    color     : colors.$red;
+    color     : var(--color-red);
     background: none !important;
 }
 

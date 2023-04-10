@@ -1,16 +1,48 @@
-import { bestColor, Color, invertHex } from "../../modules/color/index.js";
-import { search } from "../../modules/search/query.js";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { ColorMapping, getInvertedColor } from "../../modules/color/index.js";
+import { Precompile } from "../../modules/precompile/index.js";
+import Search from "../../modules/search/query.js";
+import { ToramItem } from "../../modules/types/ToramItem.js";
+import { getElementColor } from "../../modules/utils/getElementColor.js";
+import { getItemTypeIcon } from "../../modules/utils/getItemTypeIcon.js";
 import Utils from "../../modules/utils/index.js";
-import { ToramItem } from "../../modules/_types/item.js";
+import { Helmet } from "../_base/helmet.js";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const ItemDetails = async (props: { item: ToramItem }) => {
 	const { item } = props;
+	const itemBaseStat = {
+		atk: undefined,
+		def: undefined,
+		sta: undefined,
+		ele: undefined,
+	};
+
+	for (const stat of item.stats) {
+		if (stat.name.includes("Base ATK")) {
+			itemBaseStat.atk = Number(stat.val);
+			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+		}
+		if (stat.name.includes("Base Stability")) {
+			itemBaseStat.sta = Number(stat.val);
+			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+		}
+		if (stat.name.includes("Base DEF")) {
+			itemBaseStat.def = Number(stat.val);
+			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+		}
+		if (stat.name.includes("Element")) {
+			itemBaseStat.ele = stat.name;
+			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+		}
+	}
 
 	const crystaUpgradeTo: ToramItem[] = [];
 	for (const usage of item.uses) {
-		const possibleItem = (await search(`${usage.for} -t crysta`)).list.at(0);
+		const possibleItem = (await Search.query(usage.for)).list.find((entry) => entry.id !== item.id);
 
-		if (possibleItem) {
+		if (new RegExp(/crysta/i).test(possibleItem?.type)) {
 			item.uses = Utils.filter(item.uses, (u) => u.for !== usage.for);
 			crystaUpgradeTo.push(possibleItem as ToramItem);
 		}
@@ -20,7 +52,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 	for (const stat of item.stats) {
 		if (!stat.name.startsWith("Upgrade for")) continue;
 
-		const possibleItem = (await search(`${stat.val} -t crysta`)).list.at(0);
+		const possibleItem = (await Search.query(`${stat.val} -t crysta`)).list.find((entry) => entry.id !== item.id);
 
 		if (possibleItem) {
 			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
@@ -30,181 +62,219 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 
 	return (
 		<div class="row">
-			<div class="col s6">
-				<p>
-					<b>Type:</b> {item.type}
-				</p>
-				<p>
-					<b>Sell:</b> {item.sell} Spina
-				</p>
-				<p>
-					<b>Proc:</b>{" "}
-					{(item.proc && (
-						<>
-							{item.proc.type} x<b>{item.proc.amount}</b>
-						</>
-					)) ||
-						"N/A"}
-				</p>
-				{item.stats?.length > 0 && (
-					<>
-						<p>
-							<b>Stats:</b>
-						</p>
-						{item.stats?.map((stat) => (
-							<p>
-								- {stat.name} <b>{stat.val}</b>
-							</p>
-						))}
-					</>
-				)}
-			</div>
-			<div class="col s6 right-align">
-				{(item as ToramItem).thumb ? (
+			{item.thumb && (
+				<div class="col s6">
 					<img
 						src={item.thumb}
 						alt={item.name}
 					/>
-				) : (
-					{}
-				)}
+				</div>
+			)}
+
+			<div class="item-stat col s6">
+				<b>Type:</b>
+				<div>
+					{getItemTypeIcon(item.type)}
+					{item.type}
+					{itemBaseStat.atk ? (
+						<>
+							{" "}
+							@ <b>ATK {itemBaseStat.atk}</b> ({itemBaseStat.sta}%)
+						</>
+					) : itemBaseStat.def ? (
+						<>
+							{" "}
+							@ <b>DEF {itemBaseStat.def}</b>
+						</>
+					) : (
+						""
+					)}
+				</div>
 			</div>
-			<div class="col s12">
-				{crystaUpgradeFor.map((crysta) => (
-					<>
-						<p>
-							<b>Upgrade for:</b>
-						</p>
-						<p>
-							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
-						</p>
-					</>
-				))}
-				{crystaUpgradeTo.map((crysta) => (
-					<>
-						<p>
-							<b>Upgrade to:</b>
-						</p>
-						<p>
-							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
-						</p>
-					</>
-				))}
-				{item.drops?.length > 0 && (
-					<>
-						<p>
-							<b>Obtainable from:</b>
-						</p>
-						<table class="striped no-padding">
-							<tbody>
-								{await Promise.all(
-									item.drops?.map(async (drop) => {
-										const monsterItem = (await search(drop.from, true)).list.pop();
 
-										return (
-											<tr>
-												<td>
-													<a href={monsterItem ? `/details/${drop.from}` : "#"}>
-														{monsterItem?.name || drop.from}
-													</a>
-												</td>
-												<td>{monsterItem?.type || "Unknown"}</td>
-												<td>
-													{drop.dyes?.map((dye) => (
-														<span
-															class="color-block"
-															style={[
-																`background: #${Color.get(Number(dye))}`,
-																`color: #${invertHex(Color.get(Number(dye)))}`,
-															].join(";")}>
-															<b>{dye}</b>
-														</span>
-													))}
-												</td>
-											</tr>
-										);
-									})
-								)}
-							</tbody>
-						</table>
-					</>
-				)}
-				{item.uses?.length > 0 && (
-					<>
-						<p>
-							<b>Used for:</b>
-						</p>
-						<table class="striped no-padding">
-							<tbody>
-								{await Promise.all(
-									item.uses?.map(async (use) => {
-										const useItem = (await search(use.for, true)).list.pop();
+			{itemBaseStat.ele && (
+				<div class="item-stat col s6">
+					<b>Base element:</b>
+					<div style={`color:${getElementColor(itemBaseStat.ele)}`}>
+						{getItemTypeIcon("element")}
+						{itemBaseStat.ele}
+					</div>
+				</div>
+			)}
 
-										return (
-											<tr>
-												<td>
-													<a href={useItem ? `/details/${use.for}` : "#"}>
-														{useItem?.name || use.for}
-													</a>
-												</td>
-												<td>{useItem?.type || "Unknown"}</td>
-												<td>
-													x<b>{use.amount}</b>
-												</td>
-											</tr>
-										);
-									})
-								)}
-							</tbody>
-						</table>
-					</>
-				)}
-				{item.recipe.materials?.length > 0 && (
-					<>
-						<p>
-							<b>Crafting recipe:</b>
-						</p>
-						<p>
-							<b>Level: </b> {item.recipe.level}
-						</p>
-						<p>
-							<b>Difficulty: </b> {item.recipe.difficulty}
-						</p>
-						<p>
-							<b>Fee: </b> {item.recipe.fee}
-						</p>
-						<p>
-							<b>Set: </b> {item.recipe.set}
-						</p>
-						<p>
-							<b>Materials: </b>
-						</p>
-						<table class="striped no-padding">
-							<tbody>
-								{await Promise.all(
-									item.recipe.materials?.map(async (material) => {
-										const materialItem = (await search(material.item, true)).list.pop();
-
-										return (
-											<tr>
-												<td>
-													<a href={materialItem ? `/details/${material.item}` : "#"}>
-														{materialItem?.name || material.item}
-													</a>
-												</td>
-												<td>{materialItem?.type || "Unknown"}</td>
-												<td>
-													x<b>{material.amount}</b>
-												</td>
-											</tr>
-										);
-									})
-								)}
-							</tbody>
-						</table>
-					</>
-				)}
+			<div class="item-stat col s6">
+				<b>Sell value:</b>
+				<div>
+					{getItemTypeIcon("coin")}
+					{(item.sell && (
+						<>
+							<b>{item.sell}</b> Spina
+						</>
+					)) ||
+						"Unknown"}
+				</div>
 			</div>
+
+			<div class="item-stat col s6">
+				<b>Process value:</b>
+				<div>
+					{getItemTypeIcon(null)}
+					{(item.proc.amount !== -1 && (
+						<>
+							{item.proc.type} x<b>{item.proc.amount}</b>
+						</>
+					)) ||
+						"Unknown"}
+				</div>
+			</div>
+
+			{crystaUpgradeFor.length > 0 && (
+				<div class="item-stat col s6">
+					<b>Crysta Upgrade for:</b>
+					{crystaUpgradeFor.map((crysta) => (
+						<div>
+							{getItemTypeIcon("crysta")}
+							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
+						</div>
+					))}
+				</div>
+			)}
+
+			{crystaUpgradeTo.length > 0 && (
+				<div class="item-stat col s6">
+					<b>Crysta Upgrade to:</b>
+					{crystaUpgradeTo.map((crysta) => (
+						<div>
+							{getItemTypeIcon("crysta")}
+							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
+						</div>
+					))}
+				</div>
+			)}
+
+			<div class="col s12" />
+
+			{item.stats?.length > 0 && (
+				<div class="item-stat col s6">
+					<b>Item stats:</b>
+					{item.stats?.map((stat) => (
+						<div>
+							{stat.name} <b>{stat.val}</b>
+						</div>
+					))}
+				</div>
+			)}
+
+			{item.recipe.materials?.length > 0 && (
+				<div class="item-stat col s6">
+					<b>Crafting recipe:</b>
+					<div>
+						<b>Level: </b> {item.recipe.level}
+					</div>
+					<div>
+						<b>Difficulty: </b> {item.recipe.difficulty}
+					</div>
+					<div>
+						<b>Fee: </b> {item.recipe.fee.toLocaleString()}
+					</div>
+					<div>
+						<b>Set: </b> {item.recipe.set}
+					</div>
+					<div>
+						<b>Materials: </b>
+					</div>
+					<div class="item-stat">
+						{await Promise.all(
+							item.recipe.materials?.map(async (material) => {
+								const materialItem = (await Search.query(material.item, true)).list.pop();
+
+								return (
+									<div class="col s12">
+										<div class="col s6">
+											{getItemTypeIcon(materialItem?.type)}
+											<a href={materialItem ? `/details/${material.item}` : "#"}>
+												{materialItem?.name || material.item}
+											</a>
+										</div>
+										<div class="col s3">{materialItem?.type || "Unknown"}</div>
+										<div class="col s3">
+											x<b>{material.amount}</b>
+										</div>
+									</div>
+								);
+							})
+						)}
+					</div>
+				</div>
+			)}
+
+			{item.uses?.length > 0 && (
+				<div class="item-stat col s6">
+					<b>Item usages:</b>
+					{await Promise.all(
+						item.uses?.map(async (use) => {
+							const useItem = (await Search.query(use.for, true)).list.pop();
+
+							return (
+								<div class="col s12">
+									<div class="col s6">
+										{getItemTypeIcon(useItem?.type)}
+										<a href={useItem ? `/details/${use.for}` : "#"}>
+											{useItem?.name || use.for}
+										</a>{" "}
+									</div>
+									<div class="col s3">{useItem?.type || "Unknown"}</div>
+									<div class="col s3">
+										x<b>{use.amount}</b>
+									</div>
+								</div>
+							);
+						})
+					)}
+				</div>
+			)}
+
+			{item.drops?.length > 0 && (
+				<div class={`item-stat col ${item.drops?.length > 8 ? "s12" : "s6"}`}>
+					<b>Obtainable from:</b>
+					{await Promise.all(
+						item.drops?.map(async (drop) => {
+							const monsterItem = (await Search.query(drop.from, true)).list.pop();
+
+							return (
+								<div class="col s12">
+									<div class="col s6">
+										{getItemTypeIcon(monsterItem?.type || drop.from)}
+										<a href={monsterItem ? `/details/${drop.from}` : "#"}>
+											{monsterItem?.name || drop.from}
+										</a>
+									</div>
+									<div class="col s3">
+										{monsterItem
+											? monsterItem.type
+											: new RegExp(/skill/gi).test(drop.from)
+											? "Player Skill"
+											: "NPC"}
+									</div>
+									<div class="col s3">
+										{drop.dyes?.map((dye) => (
+											<span
+												class="color-block"
+												style={[
+													`background: #${ColorMapping.get(Number(dye))}`,
+													`color: #${getInvertedColor(ColorMapping.get(Number(dye)))}`,
+												].join(";")}>
+												<b>{dye}</b>
+											</span>
+										))}
+									</div>
+								</div>
+							);
+						})
+					)}
+				</div>
+			)}
+			<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/base.scss"))}</Helmet.styles.Push>
 		</div>
 	);
 };

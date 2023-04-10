@@ -1,20 +1,20 @@
 import workerpool from "workerpool";
 import { App } from "../app.js";
-import { ToramMonster } from "../_types/monster.js";
-import { preloadLevelModelList } from "./task.js";
+import { ToramMonster } from "../types/index.js";
+import { preloadLevelMonsterList } from "./preloadLevelModels.js";
 
-export const monsterListPool = workerpool.pool({
+const monsterListWorkerPool = workerpool.pool({
 	maxWorkers: App.MaxConcurrency,
 });
-export const getMonsterList = async (
+const getMonsterListOfLevel = async (
 	level: number,
 	bonus: number
 ): Promise<{ monster: ToramMonster; expWithBonus: number; expWithoutBonus: number }[]> =>
 	new Promise((resolve, reject) => {
-		monsterListPool
-			.exec(_getMonsterList, [
+		monsterListWorkerPool
+			.exec(workerGetMonsterList, [
 				{
-					list: preloadLevelModelList,
+					list: preloadLevelMonsterList,
 					level,
 					bonus,
 				},
@@ -23,73 +23,75 @@ export const getMonsterList = async (
 			.catch(reject);
 	});
 
-const _getMonsterList = (opts: {
+const workerGetMonsterList = (opts: {
 	list: ToramMonster[];
 	level: number;
 	bonus: number;
 }): { monster: ToramMonster; expWithBonus: number; expWithoutBonus: number }[] => {
+	// duplicate - for use within another worker process
+	const getMonsterInfoByLevel = (monster: ToramMonster, level: number, bonusExp?: number) => {
+		const monsterLevel = Number(monster.level) || 1;
+		const monsterExp = Number(monster.exp) || 1;
+		const levelDifference = Math.abs(monsterLevel - level);
+
+		if (levelDifference < 10) {
+			// only allow if level difference is less than 10
+			let expMultiplier = 11;
+			if (levelDifference >= 6) expMultiplier = 10;
+			if (levelDifference >= 7) expMultiplier = 9;
+			if (levelDifference >= 8) expMultiplier = 7;
+			if (levelDifference >= 9) expMultiplier = 3;
+
+			return {
+				monster,
+				expWithBonus: Math.round(monsterExp * expMultiplier * (1 + (bonusExp || 0) / 100)),
+				expWithoutBonus: Math.round(monsterExp * expMultiplier),
+			};
+		} else {
+			return undefined;
+		}
+	};
+
 	// results list
 	const results: {
 		monster: ToramMonster;
 		expWithBonus: number;
 		expWithoutBonus: number;
 	}[] = [];
+	const bonusExp = 1 + (opts.bonus || 0) / 100;
 
 	// variables
-	for (const monsterEntry of opts.list) {
-		// ignore event/missing data mobs
-		if (!Number(monsterEntry.exp) || monsterEntry.level === 0 || /event/gi.test(monsterEntry.map)) {
-			continue;
-		}
+	for (const entry of opts.list) {
+		if (!entry.exp) continue;
 
-		const monsterLevel = Number(monsterEntry.level) ? Number(monsterEntry.level) : 1;
-		const monsterExp = Number(monsterEntry.exp) ? Number(monsterEntry.exp) : 1;
-		const bonusExp = 1 + (opts.bonus || 0) / 100;
-
-		if (Math.abs(monsterLevel - opts.level) < 10) {
-			// only allow if level difference is less than 10
-			const expMultiplier =
-				Math.abs(monsterLevel - opts.level) <= 5
-					? 11
-					: Math.abs(monsterLevel - opts.level) <= 6
-					? 10
-					: Math.abs(monsterLevel - opts.level) <= 7
-					? 9
-					: Math.abs(monsterLevel - opts.level) <= 8
-					? 7
-					: Math.abs(monsterLevel - opts.level) <= 9
-					? 3
-					: 1;
-
-			results.push({
-				monster: monsterEntry,
-				expWithBonus: Math.round(monsterExp * expMultiplier * bonusExp),
-				expWithoutBonus: Math.round(monsterExp * expMultiplier),
-			});
-		}
+		const data = getMonsterInfoByLevel(entry, opts.level, bonusExp);
+		if (data) results.push(data);
 	}
 
 	return results.sort((e1, e2) => e2.expWithBonus - e1.expWithBonus);
 };
 
-export const getMonsterLevelInfo = (monster: ToramMonster, level: number, bonusExp?: number) => {
-	const expBase = Number(monster.exp) || 0;
-	const expMultiplier =
-		Math.abs(monster.level - level) <= 5
-			? 11
-			: Math.abs(monster.level - level) <= 6
-			? 10
-			: Math.abs(monster.level - level) <= 7
-			? 9
-			: Math.abs(monster.level - level) <= 8
-			? 7
-			: Math.abs(monster.level - level) <= 9
-			? 3
-			: 1;
+const getMonsterInfoByLevel = (monster: ToramMonster, level: number, bonusExp?: number) => {
+	const monsterLevel = Number(monster.level) || 1;
+	const monsterExp = Number(monster.exp) || 1;
+	const levelDifference = Math.abs(monsterLevel - level);
 
-	return {
-		monster,
-		expWithBonus: Math.round(expBase * expMultiplier * (1 + (bonusExp || 0) / 100)),
-		expWithoutBonus: Math.round(expBase * expMultiplier),
-	};
+	if (levelDifference < 10) {
+		// only allow if level difference is less than 10
+		let expMultiplier = 11;
+		if (levelDifference >= 6) expMultiplier = 10;
+		if (levelDifference >= 7) expMultiplier = 9;
+		if (levelDifference >= 8) expMultiplier = 7;
+		if (levelDifference >= 9) expMultiplier = 3;
+
+		return {
+			monster,
+			expWithBonus: Math.round(monsterExp * expMultiplier * (1 + (bonusExp || 0) / 100)),
+			expWithoutBonus: Math.round(monsterExp * expMultiplier),
+		};
+	} else {
+		return undefined;
+	}
 };
+
+export { monsterListWorkerPool, getMonsterListOfLevel, getMonsterInfoByLevel };

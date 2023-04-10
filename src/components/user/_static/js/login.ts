@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+{
 	let resTimeout: NodeJS.Timeout;
 
 	const btnSubmit = document.getElementById("login_submit") as HTMLDivElement;
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			responseMessage.classList.add("hidden");
 		}, 10e3);
 	};
-});
+}
 
 type MessageResponse = {
 	status: number;

@@ -5,7 +5,7 @@ import { Helmet } from "../_base/helmet.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const BaseManageUpload = () => (
-	<>
+	<div class="col s12">
 		<div class="card">
 			<div class="card-content">
 				<div class="row">
@@ -41,7 +41,7 @@ export const BaseManageUpload = () => (
 				</div>
 			</div>
 		</div>
-		<style>{Precompile.sass(join(__dirname, "./_static/css/upload.scss"))}</style>
+		<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/upload.scss"))}</Helmet.styles.Push>
 		<Helmet.scripts.Push>{Precompile.typescript(join(__dirname, "./_static/js/upload.ts"))}</Helmet.scripts.Push>
-	</>
+	</div>
 );

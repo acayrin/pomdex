@@ -1,8 +1,17 @@
-import { ToramObject } from "../../../../modules/_types/toram.js";
-import { ToramMap } from "../../../../modules/_types/map.js";
-import { ToramMonster } from "../../../../modules/_types/monster.js";
+import { ToramObject } from "../../../../modules/types/ToramObject.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+{
+	const type = document.getElementById("edit_type") as HTMLSelectElement;
+	type.addEventListener("change", () => {
+		if (type.value.includes("Monster") || type.value.toLowerCase().includes("boss")) {
+			document.getElementById("edit_body").innerHTML = "${(<ManageEditMonster />)}";
+		} else if (type.value === "Map") {
+			document.getElementById("edit_body").innerHTML = "${(<ManageEditMap />)}";
+		} else {
+			document.getElementById("edit_body").innerHTML = "${(<ManageEditItem />)}";
+		}
+	});
+
 	const btnSubmit = document.getElementById("edit_submit_update");
 	btnSubmit?.addEventListener("click", () => {
 		const elements = {
@@ -121,4 +130,4 @@ document.addEventListener("DOMContentLoaded", () => {
 				});
 		}
 	});
-});
+}

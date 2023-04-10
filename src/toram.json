@@ -3,6 +3,8 @@
 		"levelCap": 265,
 		"ignoredList": {
 			"byName": [
+				"Event",
+				"event",
 				"Neewollah",
 				"Gigantic Octopus",
 				"M DL",
@@ -42,15 +44,19 @@
 				"Yuveria",
 				"Mercy",
 				"Pomie Chan",
-				"Potumotter"
+				"Potumotter",
+				"Pillow Kitagawa",
+				"Grand Pojo"
 			],
 			"byMap": [
+				"Event",
 				"M399",
 				"M192",
 				"M338",
 				"M111",
 				"M79",
 				"M404",
+				"M305",
 				"M368",
 				"M369",
 				"M239",
@@ -64,7 +70,9 @@
 				"M416",
 				"M417",
 				"M427",
-				"M479"
+				"M479",
+				"M489",
+				"M508"
 			]
 		}
 	}

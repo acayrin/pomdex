@@ -1,6 +1,15 @@
 import "colors";
+import { createHash } from "crypto";
+import { readdirSync, statSync } from "fs";
+import { getElementColor } from "./getElementColor.js";
+import { getItemTypeIcon } from "./getItemTypeIcon.js";
 
 export default class Utils {
+	/**
+	 * Clean up duplicates in an array
+	 * @param a An array
+	 * @returns Modified array
+	 */
 	static uniqueArray = <T>(a: T[]) => {
 		const seen: any = {};
 		const out = [];
@@ -15,6 +24,11 @@ export default class Utils {
 		return out;
 	};
 
+	/**
+	 * Format timestamp to a human readable string
+	 * @param time Timestamp in ms
+	 * @returns Formatted time string
+	 */
 	static formatTime = (time: number): string => {
 		time = Math.floor(time);
 		const hrs = ~~(time / 3600);
@@ -29,6 +43,12 @@ export default class Utils {
 		return ret;
 	};
 
+	/**
+	 * Faster array filtering?
+	 * @param a An array
+	 * @param cb Callback function applied to filter entries
+	 * @returns A new filtered array
+	 */
 	static filter = <T>(a: T[], cb: (b: T, i?: number) => boolean) => {
 		const f: typeof a = [];
 		let i = 0;
@@ -42,61 +62,82 @@ export default class Utils {
 		return f;
 	};
 
-	static rgb2hex = (rgb: string): string =>
-		rgb
-			.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)
-			.slice(1)
-			.map((n) => parseInt(n, 10).toString(16).padStart(2, "0"))
-			.join("");
-
-	static jsonDiff = (_a: any, _b: any): boolean => {
-		if (_a instanceof Function) {
-			if (_b instanceof Function) {
-				return _a.toString() === _b.toString();
-			}
-			return true;
-		} else if (!(_a && _b)) {
-			return _a !== _b;
-		} else if (_a === _b || _a.valueOf() === _b.valueOf()) {
-			return false;
-		} else if (Array.isArray(_a)) {
-			if (Array.isArray(_b)) {
-				if (_a.sort().length !== _b.sort().length) {
-					return true;
-				}
-				for (const _aa of _a) {
-					if (_b.indexOf(_aa) === -1) {
-						const test = this.jsonDiff(_b[_a.indexOf(_aa)], _aa);
-						if (test) {
-							return true;
-						}
-					}
-				}
-				return false;
-			}
-			return true;
-		} else if (Object.keys(_a).length !== Object.keys(_b).length) {
-			return true;
-		} else {
-			for (const _k in _a) {
-				const test = this.jsonDiff(_a[_k], _b[_k]);
-				if (test) {
-					return true;
-				}
+	/**
+	 * Recursive lookup a folder and apply callback function to each found file path
+	 * @param path Path to lookup
+	 * @param callback Function callback applied to each found file path
+	 */
+	static recursiveLookup = async (path: string, callback: (path: string) => Promise<unknown>): Promise<void> => {
+		for (const name of readdirSync(path)) {
+			if (statSync(`${path}/${name}`).isDirectory()) {
+				await Utils.recursiveLookup(`${path}/${name}`, callback);
+			} else {
+				await new Promise((res) => callback(`${path}/${name}`).then(res));
 			}
 		}
-		return false;
 	};
 
+	/**
+	 * Generate hash
+	 * @param input Input string or buffer
+	 * @param algorithm Algorithm, default "md5"
+	 * @returns Generated hash
+	 */
+	static hash = (input: string | Buffer, algorithm = "md5"): string =>
+		createHash(algorithm).update(input).digest("hex");
+
+	/**
+	 * Info level logging
+	 * @param args Messages
+	 */
 	static info = (...args: unknown[]) => process.stdout.write(`${new Date().toISOString().grey} ${args.join(" ")}\n`);
 
-	static error = (...args: unknown[]) => process.stdout.write(`${new Date().toISOString().red} ${args.join(" ")}\n`);
+	/**
+	 * Error level logging
+	 * @param args Messages
+	 */
+	static error = (...args: unknown[]) => {
+		const errorIndex = args.findIndex((arg) => arg instanceof Error);
+		let errorObject: Error;
 
+		if (errorIndex !== -1) {
+			errorObject = args.splice(errorIndex, 1)[0] as Error;
+		}
+
+		process.stdout.write(`${new Date().toISOString().red} ${args.join(" ")}\n`);
+		errorObject && console.error(errorObject);
+	};
+
+	/**
+	 * Warning level logging
+	 * @param args Messages
+	 */
 	static warn = (...args: unknown[]) =>
 		process.stdout.write(`${new Date().toISOString().yellow} ${args.join(" ")}\n`);
 
+	/**
+	 * Generate an array of numbers within range
+	 * @param start Starting point
+	 * @param stop Ending point
+	 * @param step Step
+	 * @returns Array of generated numbers
+	 */
 	static range = (start: number, stop: number, step = 1): number[] =>
 		Array(Math.ceil((stop - start) / step))
 			.fill(start)
 			.map((x, y) => x + y * step);
+
+	/**
+	 * Get display color of an element
+	 * @param element Element string
+	 * @returns Hex color
+	 */
+	static getElementColor = getElementColor;
+
+	/**
+	 * Get display icon of a entry type
+	 * @param type Type string
+	 * @returns Svg icon component
+	 */
+	static getItemTypeIcon = getItemTypeIcon;
 }

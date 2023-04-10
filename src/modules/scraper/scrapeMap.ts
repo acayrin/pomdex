@@ -1,47 +1,47 @@
-import { ToramMap } from "../_types/map.js";
+import ky from "ky";
+import { load } from "cheerio";
+import { ToramMap } from "../types/ToramMap.js";
 
-export const scrapeMap = async (id: number) => {
-	const ky = (await import("ky")).default;
-	const { load } = await import("cheerio");
-	const ID = id || 1;
-
-	// preload
-	const html = await (
-		await ky(`https://coryn.club/map.php?id=${ID}`, {
+export const scrapeMap = (id = 1): Promise<ToramMap> =>
+	new Promise((resolve, reject) => {
+		// preload
+		ky(`https://coryn.club/map.php?id=${id}`, {
 			retry: {
 				limit: 1e9,
 			},
 			timeout: 60e3,
 		})
-	).text();
-	if (html.toLowerCase().includes("no result found")) {
-		return undefined;
-	}
+			.text()
+			.then((html) => {
+				if (html.toLowerCase().includes("no result found")) {
+					return reject(undefined);
+				}
 
-	const $ = load(html);
+				const $ = load(html);
 
-	const monsterList: string[] = [];
-	$("#content .accordion.card-attach-bottom")
-		.find("p")
-		.each((_, elem) => {
-			const monsterEntryId = $(elem).find("a").first().attr("href");
-			if (monsterEntryId) {
-				monsterList.push(`E${monsterEntryId.match(/\d+/g).shift()}`);
-			} else {
-				monsterList.push(
-					$(elem)
-						.text()
-						.replace(/\[.+?\]/g, "")
-						.trim()
-				);
-			}
-		});
+				const monsterList: string[] = [];
+				$("#content .accordion.card-attach-bottom")
+					.find("p")
+					.each((_, elem) => {
+						const monsterEntryId = $(elem).find("a").first().attr("href");
+						if (monsterEntryId) {
+							monsterList.push(`E${monsterEntryId.match(/\d+/g).shift()}`);
+						} else {
+							monsterList.push(
+								$(elem)
+									.text()
+									.replace(/\[.+?\]/g, "")
+									.trim()
+							);
+						}
+					});
 
-	const mapName = $("p.card-title").text();
-	return {
-		id: `M${ID}`,
-		name: mapName,
-		type: "Map",
-		monsters: monsterList,
-	} as ToramMap;
-};
+				const mapName = $("p.card-title").text();
+				return resolve({
+					id: `M${id}`,
+					name: mapName,
+					type: "Map",
+					monsters: monsterList,
+				} as ToramMap);
+			});
+	});

@@ -14,7 +14,7 @@ export class Precompile {
 			esbuildOptions || {
 				loader: "css",
 				minify: true,
-				legalComments: "none",
+				legalComments: "external",
 			}
 		).code;
 
@@ -36,7 +36,7 @@ export class Precompile {
 						esbuildOptions || {
 							loade: "css",
 							minify: true,
-							legalComments: "none",
+							legalComments: "external",
 						}
 					)
 						.then((res) => {
@@ -48,6 +48,48 @@ export class Precompile {
 		);
 	}
 
+	static css(path: string, inline?: true, esbuildOptions?: TransformOptions): HtmlEscapedString;
+	static css(path: string, inline: false, esbuildOptions?: TransformOptions): string;
+	static css(path: string, inline = true, esbuildOptions?: TransformOptions) {
+		const out = transformSync(
+			readFileSync(path, "utf-8"),
+			esbuildOptions || {
+				loader: "css",
+				minify: true,
+				legalComments: "external",
+			}
+		).code;
+
+		return inline ? html(out as unknown as TemplateStringsArray) : out;
+	}
+
+	static cssAsync(path: string, inline?: true, esbuildOptions?: TransformOptions): Promise<HtmlEscapedString>;
+	static cssAsync(path: string, inline: false, esbuildOptions?: TransformOptions): Promise<string>;
+	static cssAsync(
+		path: string,
+		inline = true,
+		esbuildOptions?: TransformOptions
+	): Promise<string | TemplateStringsArray> {
+		return new Promise((resolve, reject) =>
+			readFile(path, "utf-8", (err, res) => {
+				if (err) reject(err);
+
+				return transform(
+					res,
+					esbuildOptions || {
+						loade: "css",
+						minify: true,
+						legalComments: "external",
+					}
+				)
+					.then((res) => {
+						resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code);
+					})
+					.catch(reject);
+			})
+		);
+	}
+
 	static typescript(path: string, inline?: true, esbuildOptions?: TransformOptions): HtmlEscapedString;
 	static typescript(path: string, inline: false, esbuildOptions?: TransformOptions): TemplateStringsArray;
 	static typescript(path: string, inline = true, esbuildOptions?: TransformOptions): string | TemplateStringsArray {
@@ -56,6 +98,7 @@ export class Precompile {
 			esbuildOptions || {
 				loader: "ts",
 				minify: true,
+				legalComments: "external",
 			}
 		).code;
 
@@ -78,6 +121,45 @@ export class Precompile {
 					esbuildOptions || {
 						loader: "ts",
 						minify: true,
+						legalComments: "external",
+					}
+				).then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code));
+			});
+		});
+	}
+
+	static javascript(path: string, inline?: true, esbuildOptions?: TransformOptions): HtmlEscapedString;
+	static javascript(path: string, inline: false, esbuildOptions?: TransformOptions): TemplateStringsArray;
+	static javascript(path: string, inline = true, esbuildOptions?: TransformOptions): string | TemplateStringsArray {
+		const out = transformSync(
+			readFileSync(path, "utf-8"),
+			esbuildOptions || {
+				loader: "js",
+				minify: true,
+				legalComments: "external",
+			}
+		).code;
+
+		return inline ? html(out as unknown as TemplateStringsArray) : out;
+	}
+
+	static javascriptAsync(path: string, inline?: true, esbuildOptions?: TransformOptions): Promise<HtmlEscapedString>;
+	static javascriptAsync(path: string, inline: false, esbuildOptions?: TransformOptions): Promise<string>;
+	static javascriptAsync(
+		path: string,
+		inline = true,
+		esbuildOptions?: TransformOptions
+	): Promise<string | TemplateStringsArray> {
+		return new Promise((resolve, reject) => {
+			readFile(path, { encoding: "utf-8" }, (err, res) => {
+				if (err) reject(err);
+
+				transform(
+					res,
+					esbuildOptions || {
+						loader: "js",
+						minify: true,
+						legalComments: "external",
 					}
 				).then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code));
 			});

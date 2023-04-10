@@ -2,10 +2,10 @@ import { html } from "hono/html";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Precompile } from "../../modules/precompile/index.js";
-import { ToramItem } from "../../modules/_types/item.js";
-import { ToramMap } from "../../modules/_types/map.js";
-import { ToramMonster } from "../../modules/_types/monster.js";
-import { ToramObject } from "../../modules/_types/toram.js";
+import { ToramItem } from "../../modules/types/ToramItem.js";
+import { ToramMap } from "../../modules/types/ToramMap.js";
+import { ToramMonster } from "../../modules/types/ToramMonster.js";
+import { ToramObject } from "../../modules/types/ToramObject.js";
 import { Helmet } from "../_base/helmet.js";
 import { ManageEditItem } from "./edit/item.js";
 import { ManageEditMap } from "./edit/map.js";
@@ -50,7 +50,7 @@ export const BaseManageEdit = (props: { entry?: ToramObject }) => {
 	const { entry } = props;
 
 	return (
-		<>
+		<div class="col s12">
 			<div class="card">
 				<div class="card-content">
 					<span
@@ -129,7 +129,7 @@ export const BaseManageEdit = (props: { entry?: ToramObject }) => {
 				)}
 			</Helmet.scripts.Push>
 			<Helmet.scripts.Push>{Precompile.typescript(join(__dirname, "./_static/js/edit.ts"))}</Helmet.scripts.Push>
-			<style>{Precompile.sass(join(__dirname, "./_static/css/edit.scss"))}</style>
-		</>
+			<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/edit.scss"))}</Helmet.styles.Push>
+		</div>
 	);
 };

@@ -12,10 +12,11 @@ though this won't replace all of Coryn.club nor Toram ID Info, i'll try to add s
 -   an item explorer for the hackermen
 -   a more detailed leveling guide generator
 
-### thanks
+### credits
 
 -   data source : Coryn.club
 -   some formulas : Toramonline forum
+-   lazy tanaka's monthly dye forecast
 
 #### technical stuffs
 

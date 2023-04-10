@@ -1,4 +1,4 @@
-import { ToramMap } from "../../../modules/_types/map.js";
+import { ToramMap } from "../../../modules/types/ToramMap.js";
 
 export const ManageEditMap = (props: { entry?: ToramMap }) => {
 	const { entry } = props;

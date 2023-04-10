@@ -1,4 +1,4 @@
-import { ToramMonster } from "../../../modules/_types/monster.js";
+import { ToramMonster } from "../../../modules/types/ToramMonster.js";
 
 const ToramElements = ["Neutral", "Fire", "Earth", "Water", "Wind", "Light", "Dark"];
 const ToramTamable = ["Yes", "No"];

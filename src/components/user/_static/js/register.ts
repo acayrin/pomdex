@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+{
 	let resTimeout: NodeJS.Timeout;
 
 	const btnSubmit = document.getElementById("register_submit") as HTMLDivElement;
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}),
 		})
 			.then((res) => res.json())
-			.then((message: MessageResponse) => {
+			.then((message: { status: number; message?: string }) => {
 				if (message.status !== 200) {
 					displayMessage(message.message);
 					return;
@@ -56,4 +56,4 @@ document.addEventListener("DOMContentLoaded", () => {
 			responseMessage.classList.add("hidden");
 		}, 10e3);
 	};
-});
+}

@@ -1,18 +1,19 @@
 import { getLevelGuide } from "./getLevelGuide.js";
+import { GuideResultError } from "./types/index.js";
 
 const extraDisplayMaxCount = 3;
 
-export const printGuide = async (args: string, raw: boolean = false) => {
+export const printGuide = async (args: string, raw: boolean = true) => {
 	const guideResult = await getLevelGuide(args);
 	const guideFile: string[] = [];
 
 	// if error was found
 	if (guideResult.type === 3) {
-		return { error: guideResult.err };
+		return { type: 3, error: guideResult.error } as GuideResultError;
 	}
 
 	if (raw) {
-		return { data: guideResult };
+		return guideResult;
 	}
 
 	guideFile.push(
@@ -162,5 +163,5 @@ export const printGuide = async (args: string, raw: boolean = false) => {
 		}
 	}
 
-	return { data: guideFile.join("\n") };
+	return guideFile.join("\n");
 };

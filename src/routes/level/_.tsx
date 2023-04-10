@@ -2,11 +2,15 @@ import { Context } from "hono";
 import { BaseLevel } from "../../components/level/base.js";
 import { Base } from "../../components/_base/base.js";
 
-export default async (c: Context) =>
-	c.html(
-		<Base
-			title="Details"
-			path={new URL(c.req.url).pathname}>
-			<BaseLevel />
-		</Base>
-	);
+export default (c: Context) =>
+	new Promise((res) => {
+		res(
+			c.html(
+				<Base
+					title="Level"
+					path={c.req.path}>
+					<BaseLevel />
+				</Base>
+			)
+		);
+	});

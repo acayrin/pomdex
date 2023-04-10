@@ -43,7 +43,7 @@ const ToramEntryType = [
 ];
 
 export const BaseManageNew = () => (
-	<>
+	<div class="col s12">
 		<div class="card">
 			<div class="card-content">
 				<div class="row">
@@ -104,6 +104,6 @@ export const BaseManageNew = () => (
 			)}
 		</Helmet.scripts.Push>
 		<Helmet.scripts.Push>{Precompile.typescript(join(__dirname, "./_static/js/new.ts"))}</Helmet.scripts.Push>
-		<style>{Precompile.sass(join(__dirname, "./_static/css/edit.scss"))}</style>
-	</>
+		<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/edit.scss"))}</Helmet.styles.Push>
+	</div>
 );

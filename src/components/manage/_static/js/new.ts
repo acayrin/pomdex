@@ -1,8 +1,6 @@
-import { ToramObject } from "../../../../modules/_types/toram.js";
-import { ToramMap } from "../../../../modules/_types/map.js";
-import { ToramMonster } from "../../../../modules/_types/monster.js";
+import { ToramObject } from "../../../../modules/types/ToramObject.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+{
 	const btnSubmit = document.getElementById("edit_submit_new");
 
 	btnSubmit?.addEventListener("click", () => {
@@ -121,4 +119,4 @@ document.addEventListener("DOMContentLoaded", () => {
 				});
 		}
 	});
-});
+}

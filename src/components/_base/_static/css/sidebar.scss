@@ -1,0 +1,59 @@
+@use "./config.scss";
+
+.sidebar-container {
+    z-index : 9999;
+    position: fixed;
+    height  : 100%;
+    padding : 8px;
+    left    : 0;
+
+    .sidebar-body {
+        position        : absolute;
+        width           : 48px;
+        top             : 50%;
+        transform       : translate(0, -50%);
+        background-color: var(--color-dark);
+        overflow        : hidden;
+        box-shadow      : 0 2px 2px #00000024,
+            0 3px 1px -2px #0000001f,
+            0 1px 5px #0003;
+
+        &:hover {
+            width: 200px;
+        }
+
+        iconify-icon {
+            padding: 2.5px 16px 2.5px 0;
+        }
+    }
+
+    ul.nav {
+        .collapsible-header {
+            padding         : 1rem;
+            color           : var(--color-accent);
+            background-color: transparent;
+
+            &:hover {
+                color           : var(--color-accent-lighten);
+                background-color: transparent;
+            }
+        }
+
+        .collapsible-body {
+            margin: 0;
+        }
+
+        li {
+            border-radius: 0 !important;
+
+            .collapsible-header {
+                color    : var(--color-accent);
+                font-size: large !important;
+            }
+
+            .collapsible-body {
+                width: 200px;
+            }
+        }
+    }
+}

@@ -1,35 +1,37 @@
 import ky from "ky";
+import Utils from "../utils/index.js";
 
 export const uploadFile = async (buffer: Buffer, filename?: string): Promise<string> => {
 	filename ||= `${Date.now()}.jpg`;
 
 	try {
-		return await uploadFileDiscordWebhook(buffer, filename);
-	} catch (err) {
-		console.error(err);
+		return await uploadFileDiscord(buffer, filename);
+	} catch {
+		Utils.error(`Failed to upload file ${filename}, retrying in 60 seconds`);
+
 		await new Promise((res) => {
 			setTimeout(res, 60e3);
 		});
-		return await uploadFile(buffer, filename);
-	}
 
-	try {
-		return await uploadFileImgbb(buffer, filename);
-	} catch {
-		try {
-			return await uploadFileDiscord(buffer, filename);
-		} catch {
-			try {
-				return await uploadFilePutre(buffer, filename);
-			} catch {
-				return await uploadFile(buffer, filename);
-			}
-		}
+		return await uploadFile(buffer, filename);
 	}
 };
 
+// [ DISCORD USER UPLOAD ]=======================================================================================================
 const uploadFileDiscord = async (buffer: Buffer, filename?: string): Promise<string> => {
 	// request google upload url from discord
+	const uploadData = (await requestDiscordUploadURL(filename)).attachments.at(0);
+
+	// actually upload the file content to google storage
+	await requestUploadFileStorage(uploadData.upload_url, buffer);
+
+	// send a dummy message with given file uri, then get result message object
+	// and extract the attachment url hosted on discord cdn
+	const message = await requestGetFileUrl(uploadData.id, filename, uploadData.upload_filename);
+
+	return message.attachments.at(0).url;
+};
+export const requestDiscordUploadURL = async (filename: string) => {
 	const uploadUrl: {
 		attachments: {
 			id: number;
@@ -39,7 +41,7 @@ const uploadFileDiscord = async (buffer: Buffer, filename?: string): Promise<str
 	} = await ky
 		.post(`https://discord.com/api/v9/channels/${process.env.DISCORD_CHANNEL_ID}/attachments`, {
 			json: {
-				files: [{ filename, file_size: buffer.byteLength, id: "3" }],
+				files: [{ filename, file_size: 50e6, id: Date.now() }],
 			},
 			headers: {
 				Authorization: process.env.DISCORD_TOKEN,
@@ -49,14 +51,15 @@ const uploadFileDiscord = async (buffer: Buffer, filename?: string): Promise<str
 		})
 		.json();
 
+	return uploadUrl;
+};
+export const requestUploadFileStorage = (uploadUrl: string, buffer: Buffer) =>
 	// actually upload the file content to google storage
-	await ky.put(`${uploadUrl.attachments.at(0).upload_url}`, {
+	ky.put(uploadUrl, {
 		body: buffer,
 		retry: { limit: 1e10 },
 	});
-
-	// send a dummy message with given file uri, then get result message object
-	// and extract the attachment url hosted on discord cdn
+export const requestGetFileUrl = async (id: number, filename: string, uploadFilename: string) => {
 	const message: {
 		attachments: {
 			url: string;
@@ -66,9 +69,9 @@ const uploadFileDiscord = async (buffer: Buffer, filename?: string): Promise<str
 			json: {
 				attachments: [
 					{
+						id,
 						filename,
-						id: "0",
-						uploaded_filename: uploadUrl.attachments.at(0).upload_filename,
+						uploaded_filename: uploadFilename,
 					},
 				],
 				channel_id: process.env.DISCORD_CHANNEL_ID,
@@ -87,9 +90,10 @@ const uploadFileDiscord = async (buffer: Buffer, filename?: string): Promise<str
 		})
 		.json();
 
-	return message.attachments.at(0).url;
+	return message;
 };
 
+// [ DISCORD WEBHOOK UPLOAD ]==================================================================================================
 const uploadFileDiscordWebhook = async (buffer: Buffer, filename?: string): Promise<string> => {
 	// send a dummy message with given file uri, then get result message object
 	// and extract the attachment url hosted on discord cdn
@@ -117,6 +121,7 @@ const uploadFileDiscordWebhook = async (buffer: Buffer, filename?: string): Prom
 	return message.attachments.at(0).url;
 };
 
+// [ GO FILE UPLOAD ]=============================================================================================================
 const uploadFileGofile = async (buffer: Buffer, filename?: string): Promise<string> => {
 	const file = new File([buffer], filename, {
 		type: "image/jpg",
@@ -162,29 +167,7 @@ const uploadFileGofile = async (buffer: Buffer, filename?: string): Promise<stri
 	return `https://${goServer.data.server}.gofile.io/download/direct/${goUpload.data.fileId}/${filename}`;
 };
 
-const uploadFileImgbb = async (buffer: Buffer, filename: string) => {
-	const formData = new FormData();
-	formData.append(
-		"source",
-		new File([buffer], filename, {
-			type: "image/jpg",
-		})
-	);
-
-	const r: { data: { url: string } } = await (
-		await fetch(`https://api.imgbb.com/1/upload?key=05692af62f93f587d007955017962e72&name=${filename}`, {
-			method: "post",
-			body: formData,
-		})
-	).json();
-
-	try {
-		return r.data.url;
-	} catch {
-		throw r;
-	}
-};
-
+// [ PUTRE UPLOAD ]=============================================================================================================
 const uploadFilePutre = async (buffer: Buffer, filename: string) => {
 	const formData = new FormData();
 	formData.append(

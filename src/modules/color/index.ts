@@ -85,19 +85,19 @@ const colors = [
 	{ code: 84, color: "480c44" },
 	{ code: 85, color: "400c14" },
 ];
-export const Color = new Map(colors.map((c) => [c.code, c.color]));
+const ColorMapping = new Map(colors.map((c) => [c.code, c.color]));
 
 /**
- * get best matching color from hex value
+ * Get best matching color from hex value
  * @param {String} hex color hex value
  * @returns {String} color code
  */
-export const bestColor = (hex: string): string => {
+const getBestMatchingColor = (hex: string): string => {
 	let diff = 0;
-	let match = "x";
+	let match = "0";
 	if (!hex) return match;
-	for (const color of Color.keys()) {
-		const _diff = hexColorDelta(Color.get(color), hex);
+	for (const color of ColorMapping.keys()) {
+		const _diff = hexColorDelta(ColorMapping.get(color), hex.startsWith("#") ? hex.slice(1) : hex);
 		if (_diff > diff) {
 			diff = _diff;
 			match = `${color}`;
@@ -111,7 +111,7 @@ export const bestColor = (hex: string): string => {
  * @param {String} hex2 other hex value
  * @returns {Number} difference between two hex values (0-1)
  */
-export const hexColorDelta = (hex1: string, hex2: string): number => {
+const hexColorDelta = (hex1: string, hex2: string): number => {
 	const r1 = parseInt(hex1.substring(0, 2), 16);
 	const g1 = parseInt(hex1.substring(2, 4), 16);
 	const b1 = parseInt(hex1.substring(4, 6), 16);
@@ -129,10 +129,20 @@ export const hexColorDelta = (hex1: string, hex2: string): number => {
 	b /= 255;
 	return (r + g + b) / 3;
 };
-
-export const invertHex = (hex: string) => (Number(`0x1${hex}`) ^ 0xff_ff_ff).toString(16).substr(1).toUpperCase();
-
-export const isColorBright = (hex: string) => {
+/**
+ * Invert hex color string
+ * @param hex Hex color string
+ * @returns Inverted hex color string
+ */
+const getInvertedColor = (hex: string) => (Number(`0x1${hex}`) ^ 0xff_ff_ff).toString(16).substr(1).toUpperCase();
+/**
+ * Check if color is bright or dark
+ * @param hex Hex color string
+ * @returns Whether color is bright or dark
+ */
+const isColorBright = (hex: string) => {
 	const [r, g, b] = hex.match(/.{2}/g).map((x) => parseInt(x, 16));
 	return (r * 299 + g * 587 + b * 114) / 1000 > 128;
 };
+
+export { ColorMapping, getBestMatchingColor, getInvertedColor, isColorBright };

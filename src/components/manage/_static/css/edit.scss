@@ -1,7 +1,5 @@
-@use "../../../_base/_static/css/colors.scss";
-
 label.active {
-    color: colors.$accentPrimary !important;
+    color: var(--color-accent) !important;
 }
 
 .input-field {
@@ -10,36 +8,36 @@ label.active {
     }
 
     input {
-        color        : colors.$accentSecondary;
+        color        : var(--color-light);
         border-radius: 0px !important;
         appearance   : textfield;
 
         &:focus {
-            border-bottom: 1px solid colors.$accentPrimary !important;
-            box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+            border-bottom: 1px solid var(--color-accent) !important;
+            box-shadow   : 0 1px 0 0 var(--color-accent) !important;
         }
     }
 }
 
 textarea {
     font-size    : 13px !important;
-    color        : colors.$accentSecondary;
+    color        : var(--color-light);
     border-radius: 4px !important;
 
     &:focus {
-        border-bottom: 1px solid colors.$accentPrimary !important;
-        box-shadow   : 0 1px 0 0 colors.$accentPrimary !important;
+        border-bottom: 1px solid var(--color-accent) !important;
+        box-shadow   : 0 1px 0 0 var(--color-accent) !important;
     }
 }
 
 select {
     border       : none !important;
     border-radius: 4px !important;
-    color        : colors.$accentSecondary;
+    color        : var(--color-light);
 
     &:focus {
-        border    : 1px solid colors.$accentPrimary !important;
-        box-shadow: 0 1px 0 0 colors.$accentPrimary !important;
+        border    : 1px solid var(--color-accent) !important;
+        box-shadow: 0 1px 0 0 var(--color-accent) !important;
     }
 }
 
@@ -49,14 +47,14 @@ select {
     top        : 0.8rem;
     height     : 3rem;
     line-height: 3rem;
-    background : colors.$accentPrimary;
+    background : var(--color-accent);
 
     &:hover {
-        background: colors.$accentPrimaryDarken;
+        background: var(--color-accent-darken);
     }
 
     &.disabled {
         pointer-events: none;
-        background    : colors.$dark_light !important;
+        background    : var(--color-dark-lighten) !important;
     }
 }
