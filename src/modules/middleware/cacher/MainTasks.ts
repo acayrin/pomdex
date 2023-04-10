@@ -22,11 +22,11 @@ class MainTasks {
 			if (acceptEncodingHeader.match(new RegExp(/gzip/gi))) {
 				encodingType = "gzip";
 			}
-			if (acceptEncodingHeader.match(new RegExp(/br/gi))) {
-				encodingType = "br";
-			}
-			if (acceptEncodingHeader.match(new RegExp(/deflate/gi))) {
+			else if (acceptEncodingHeader.match(new RegExp(/deflate/gi))) {
 				encodingType = "deflate";
+			}
+			else if (acceptEncodingHeader.match(new RegExp(/br/gi))) {
+				encodingType = "br";
 			}
 		}
 
