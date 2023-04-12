@@ -28,7 +28,7 @@ class Worker {
 						this.#workers.splice(i, 1);
 					});
 				}, 300e3), // 5 min
-				worker: new worker.Worker(join(__dirname, "../LevelGuide.js")),
+				worker: new worker.Worker(join(__dirname, "./LevelGuide.js")),
 			};
 		}
 	};
