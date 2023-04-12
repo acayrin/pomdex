@@ -83,7 +83,7 @@ export default class Utils {
 	 * @param algorithm Algorithm, default "md5"
 	 * @returns Generated hash
 	 */
-	static hash = (input: string | Buffer, algorithm = "md5"): string =>
+	static hash = (input: string | NodeJS.ArrayBufferView, algorithm = "md5"): string =>
 		createHash(algorithm).update(input).digest("hex");
 
 	/**

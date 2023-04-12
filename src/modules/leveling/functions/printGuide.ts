@@ -1,5 +1,5 @@
+import { Worker } from "../LevelGuideWorker.js";
 import { GuideResultError } from "../types/index.js";
-import { Worker } from "../Worker.js";
 
 const extraDisplayMaxCount = 3;
 
