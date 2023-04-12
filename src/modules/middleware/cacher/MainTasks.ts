@@ -128,10 +128,6 @@ class MainTasks {
 		}
 
 		gunzip(cachedContent, { level: 9 }, (_, buffer) => {
-			// if (error) {
-			// 	Utils.error("CACHE".yellow, `E3: ${context.req.path}.`, "Possible first time rendering.", error);
-			// }
-
 			// If unable to decompress due to cache not found, use new content instead
 			let contentType: "html" | "json";
 			try {

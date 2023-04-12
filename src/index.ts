@@ -1,7 +1,6 @@
 import { taskCompileComponents } from "./components/_base/_static/precompile.js";
 import { App } from "./modules/app.js";
 import { taskConnectDatabase } from "./modules/database/index.js";
-import { taskPreloadLevelModels } from "./modules/leveling/index.js";
 import CachedPage from "./modules/middleware/cacher/index.js";
 import { logger } from "./modules/middleware/logger.js";
 import { taskDailyRefreshDyeTable } from "./modules/scraper/index.js";
@@ -22,7 +21,6 @@ app.useWithApp(
 );
 app.runTaskBefore(taskConnectDatabase);
 app.runTaskBefore(taskCompileComponents);
-app.runTaskAfter(taskPreloadLevelModels);
 app.runTaskAfter(taskDailyRefreshDyeTable);
 
 app.serve();

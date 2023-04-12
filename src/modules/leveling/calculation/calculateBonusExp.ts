@@ -1,4 +1,4 @@
-import * as Toram from "../../toram.json" assert { type: "json" };
+import * as Toram from "../../../toram.json" assert { type: "json" };
 
 /**
  * Calculate EXP bonus for given level,

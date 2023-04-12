@@ -1,10 +1,10 @@
-import { getLevelGuide } from "./getLevelGuide.js";
-import { GuideResultError } from "./types/index.js";
+import { GuideResultError } from "../types/index.js";
+import { Worker } from "../Worker.js";
 
 const extraDisplayMaxCount = 3;
 
 export const printGuide = async (args: string, raw: boolean = true) => {
-	const guideResult = await getLevelGuide(args);
+	const guideResult = await Worker.requestLevelGuide(args);
 	const guideFile: string[] = [];
 
 	// if error was found
