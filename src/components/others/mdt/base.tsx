@@ -12,8 +12,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const BaseMontlyDyeTable = async () => {
 	const date = new Date();
 	const month = {
-		current: date.getMonth(),
-		next: date.getMonth() + 1 > 12 ? 1 : date.getMonth() + 1,
+		current: date.getMonth() + 1 > 12 ? 1 : date.getMonth() + 1,
+		next: date.getMonth() + 2 > 12 ? 2 : date.getMonth() + 2,
 	};
 
 	const currentEntries = await PomdexMonthlyDye.find().toArray();
@@ -40,6 +40,7 @@ export const BaseMontlyDyeTable = async () => {
 
 						return (
 							<span
+								key={slot}
 								class="color-block"
 								style={[
 									`background: #${ColorMapping.get(code)}`,
@@ -68,7 +69,7 @@ export const BaseMontlyDyeTable = async () => {
 								entries.map(async (entry) =>
 									renderEntry(
 										entry,
-										(await Search.query(`!${entry.name} --type boss`)).list
+										(await Search.query(`${entry.name} --type boss`)).list
 											.sort((e1, e2) => (e2 as ToramMonster).hp - (e1 as ToramMonster).hp)
 											.shift()
 									)

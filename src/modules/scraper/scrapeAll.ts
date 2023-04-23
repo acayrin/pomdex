@@ -8,7 +8,7 @@ import { scrapeItem } from "./scrapeItem.js";
 import { scrapeMap } from "./scrapeMap.js";
 import { scrapeMonster } from "./scrapeMonster.js";
 
-export const scrapeAll = async () => {
+const scrapeAll = async () => {
 	const notFoundIDs: string[] = [];
 	const scrape = {
 		map: scrapeMap,
@@ -85,3 +85,7 @@ export const scrapeAll = async () => {
 		}
 	);
 };
+
+const task2WeeklyScrapeAll = () => setInterval(scrapeAll, 86_400_000 * 14);
+
+export { task2WeeklyScrapeAll, scrapeAll };

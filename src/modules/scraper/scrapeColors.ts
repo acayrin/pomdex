@@ -11,19 +11,22 @@ const intentionalTypoList = [
 	["beaat", "beast"],
 	["jade bird", "jade raptor"],
 	["gg", "g"],
-	["b.b.g", "b.b g"],
+	["b.b.g", "B.B g"],
 	["glass", "grass"],
 	["memecoleolus", "memecoleous"],
 	["prot leon", "proto leon"],
 	["barning", "burning"],
+	["super dark mushroom", "super night mushroom"],
 ];
 
 const scrapeColors = async () => {
 	const date = new Date();
-	const month = date.getMonth() + 1 > 12 ? 1 : date.getMonth() + 1;
+	const month = date.getMonth() + 2 > 12 ? 1 : date.getMonth() + 2;
+
 	const res = await PomdexMonthlyDye.findOne({
 		month,
 	});
+
 	if (res && date.getFullYear() - new Date(res._lastUpdated).getFullYear() === 0) {
 		Utils.info("DYE-TABLE".yellow, `List for #${res.month} doesn't need update yet.`);
 		return;
@@ -52,7 +55,7 @@ const scrapeColors = async () => {
 
 			// fix typos
 			for (const pair of intentionalTypoList) {
-				temp.name = temp.name.replace(new RegExp(pair[0], "i"), pair[1]);
+				temp.name = temp.name.replace(new RegExp(pair[0], "gi"), pair[1]);
 			}
 
 			const entry: {
@@ -92,6 +95,6 @@ const scrapeColors = async () => {
 	}
 };
 
-const taskDailyRefreshDyeTable = () => setInterval(scrapeColors, 24 * 36e5);
+const taskDailyRefreshDyeTable = () => setInterval(scrapeColors, 86_400_000);
 
 export { scrapeColors, taskDailyRefreshDyeTable };

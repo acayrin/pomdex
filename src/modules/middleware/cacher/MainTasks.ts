@@ -55,7 +55,7 @@ class MainTasks {
 
 		readFile(join(cacheDirPath, Utils.hash(urlPathname)), (error, file) => {
 			if (error) {
-				Utils.warn("CACHE".yellow, `E1: ${urlPathname}`, "Possibly first time rendering.", error);
+				Utils.warn("CACHE".yellow, `E1: ${urlPathname}`, "Possibly first time rendering.");
 			}
 
 			next(null, file, acceptEncoding);

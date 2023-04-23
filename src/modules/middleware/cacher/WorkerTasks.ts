@@ -30,7 +30,7 @@ class WorkerTasks {
 		const path = join(o.cacheDirPath, Utils.hash(o.urlPathname));
 		readFile(path, (error, buffer) => {
 			if (error) {
-				Utils.error("CACHE".yellow, `E1W: ${path}.`, "Possibly first time rendering.", error);
+				Utils.error("CACHE".yellow, `E1W: ${path}.`, "Possibly first time rendering.");
 			}
 
 			o.next(null, buffer);
@@ -45,7 +45,7 @@ class WorkerTasks {
 	static taskUnzipCacheFile(o: { cacheFile: Buffer | undefined; urlPathname: string; next: AsyncNext }) {
 		gunzip(o.cacheFile, { level: 9 }, (error, buffer) => {
 			if (error) {
-				Utils.error("CACHE".yellow, `E2W: ${o.urlPathname}.`, "Possible first time rendering", error);
+				Utils.error("CACHE".yellow, `E2W: ${o.urlPathname}.`, "Possible first time rendering");
 			}
 
 			o.next(null, buffer || o.cacheFile);
@@ -68,9 +68,14 @@ class WorkerTasks {
 		this.fnGenerateNewContent(o.data)
 			.then((newContent) => {
 				if (newContent instanceof Response) {
-					newContent.text().then((body) => {
-						o.next(null, Buffer.from(body));
-					});
+					newContent
+						.text()
+						.then((body) => {
+							o.next(null, Buffer.from(body));
+						})
+						.catch(() => {
+							o.next(null, null);
+						});
 				} else {
 					o.next(null, Buffer.from(newContent));
 				}

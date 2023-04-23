@@ -3,7 +3,7 @@ import { App } from "./modules/app.js";
 import { taskConnectDatabase } from "./modules/database/index.js";
 import CachedPage from "./modules/middleware/cacher/index.js";
 import { logger } from "./modules/middleware/logger.js";
-import { taskDailyRefreshDyeTable } from "./modules/scraper/index.js";
+import { task2WeeklyScrapeAll, taskDailyRefreshDyeTable } from "./modules/scraper/index.js";
 
 const app = new App({
 	honoOptions: { strict: false },
@@ -22,5 +22,6 @@ app.useWithApp(
 app.runTaskBefore(taskConnectDatabase);
 app.runTaskBefore(taskCompileComponents);
 app.runTaskAfter(taskDailyRefreshDyeTable);
+app.runTaskAfter(task2WeeklyScrapeAll);
 
 app.serve();
