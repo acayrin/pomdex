@@ -110,7 +110,7 @@ export default class Search {
 	 * @param inputString Input command
 	 */
 	static #processCommand = (inputString: string, searchOptions: SearchOptions) => {
-		const searchArguments = RegExp(new RegExp(regexParseArguments)).exec(inputString);
+		const searchArguments = inputString.match(new RegExp(regexParseArguments));
 		let searchSingleArgument: string;
 
 		while ((searchSingleArgument = searchArguments.shift())) {

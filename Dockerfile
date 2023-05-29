@@ -28,4 +28,4 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV PATH /usr/local/node/bin:$PATH
 
-CMD [ "pnpm", "run", "start" ]
+CMD [ "pnpm", "start" ]
