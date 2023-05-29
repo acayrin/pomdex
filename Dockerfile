@@ -2,12 +2,11 @@ FROM debian:bullseye as builder
 
 ENV PATH=/usr/local/node/bin:$PATH
 ARG NODE_VERSION=19.7.0
-ARG YARN_VERSION=1.22.19
 
 RUN apt-get update; apt install -y curl python-is-python3 pkg-config build-essential && \
     curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
     /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
-npm install -g yarn@$YARN_VERSION && \
+npm install -g pnpm && \
 rm -rf /tmp/node-build-master
 
 RUN mkdir /app
@@ -15,7 +14,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN yarn install
+RUN pnpm install
 
 
 FROM debian:bullseye-slim
@@ -29,4 +28,4 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV PATH /usr/local/node/bin:$PATH
 
-CMD [ "yarn", "run", "start" ]
+CMD [ "pnpm", "run", "start" ]
