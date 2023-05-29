@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import { Precompile } from "../../modules/precompile/index.js";
 import Search from "../../modules/search/query.js";
 import { ToramItem, ToramMap, ToramMonster, ToramObject } from "../../modules/types/index.js";
-import { Helmet } from "../_base/helmet.js";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { ItemDetails } from "./item.js";
 import { MapDetails } from "./map.js";
 import { MonsterDetails } from "./monster.js";
@@ -37,11 +37,11 @@ export const BaseDetails = async (props: { item: ToramObject }) => {
 					<div class="card-content">
 						<span class="card-title">{props.item.name}</span>
 						<div class="section card-display-item">
-							{(props.item as ToramItem).proc !== undefined
-								? await ItemDetails({ item: props.item as ToramItem })
-								: (props.item as ToramMonster).level !== undefined
-								? await MonsterDetails({ item: props.item as ToramMonster })
-								: await MapDetails({ item: props.item as ToramMap })}
+							{(props.item as ToramItem).proc !== undefined &&
+								(await ItemDetails({ item: props.item as ToramItem }))}
+							{(props.item as ToramMonster).level !== undefined &&
+								(await MonsterDetails({ item: props.item as ToramMonster }))}
+							{props.item.type === "Map" && (await MapDetails({ item: props.item as ToramMap }))}
 						</div>
 						<div class="section">
 							<p>

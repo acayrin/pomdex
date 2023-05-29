@@ -1,7 +1,7 @@
 import async from "async";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { Helmet } from "../../../components/_base/helmet.js";
+import { Helmet } from "../../../modules/helmet/helmet.js";
 import { ColorMapping, getInvertedColor } from "../../../modules/color/index.js";
 import { PomdexMonthlyDye } from "../../../modules/database/index.js";
 import { Precompile } from "../../../modules/precompile/index.js";
@@ -33,7 +33,7 @@ export const BaseMontlyDyeTable = async () => {
 					<b>Hidden by author</b>
 				) : (
 					["A", "B", "C"].map((slot, index) => {
-						let code: any = "A";
+						let code: "A" | "B" | "C" | number = "A";
 						if (entry.slot === slot && entry.code !== 0) code = entry.code;
 						else if (index === 1) code = "B";
 						else if (index === 2) code = "C";
@@ -43,8 +43,8 @@ export const BaseMontlyDyeTable = async () => {
 								key={slot}
 								class="color-block"
 								style={[
-									`background: #${ColorMapping.get(code)}`,
-									`color: #${getInvertedColor(ColorMapping.get(code))}`,
+									`background: #${ColorMapping.get(code as number)}`,
+									`color: #${getInvertedColor(ColorMapping.get(code as number))}`,
 								].join(";")}>
 								<b>{code}</b>
 							</span>
@@ -66,14 +66,12 @@ export const BaseMontlyDyeTable = async () => {
 					<table class="striped">
 						<tbody>
 							{await Promise.all(
-								entries.map(async (entry) =>
-									renderEntry(
-										entry,
-										(await Search.query(`${entry.name} --type boss`)).list
-											.sort((e1, e2) => (e2 as ToramMonster).hp - (e1 as ToramMonster).hp)
-											.shift()
-									)
-								)
+								entries.map(async (entry) => {
+									const results = (await Search.query(`${entry.name} --type boss`)).list;
+									results.sort((e1, e2) => (e2 as ToramMonster).hp - (e1 as ToramMonster).hp);
+
+									return renderEntry(entry, results.shift());
+								})
 							)}
 						</tbody>
 					</table>
@@ -102,7 +100,8 @@ export const BaseMontlyDyeTable = async () => {
 						This is only a shared version, created while following these{" "}
 						<a
 							target="_blank"
-							href="https://tanaka0.work/AIO/jp/DyePredictor/ColorWeapon/ShareRule">
+							href="https://tanaka0.work/AIO/jp/DyePredictor/ColorWeapon/ShareRule"
+							rel="noreferrer">
 							sharing rules.
 						</a>
 					</p>
@@ -110,7 +109,8 @@ export const BaseMontlyDyeTable = async () => {
 						Originally created by <b>Lazy Tanaka</b> on{" "}
 						<a
 							target="_blank"
-							href="https://tanaka0.work/AIO/jp/DyePredictor/ColorWeapon">
+							href="https://tanaka0.work/AIO/jp/DyePredictor/ColorWeapon"
+							rel="noreferrer">
 							their website.
 						</a>
 					</p>

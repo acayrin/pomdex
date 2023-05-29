@@ -8,7 +8,7 @@ import { uploadFile } from "./upload.js";
 
 export const scrapeItem = (id = 1): Promise<ToramItem> =>
 	new Promise((resolve, reject) => {
-		async.parallel<any>(
+		async.parallel<unknown>(
 			[
 				(next) => import("ky").then((m) => next(null, m.default)),
 				(next) => import("cheerio").then((m) => next(null, m.load)),

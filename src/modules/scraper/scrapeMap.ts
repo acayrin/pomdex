@@ -43,5 +43,6 @@ export const scrapeMap = (id = 1): Promise<ToramMap> =>
 					type: "Map",
 					monsters: monsterList,
 				} as ToramMap);
-			});
+			})
+			.catch(reject);
 	});

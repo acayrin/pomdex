@@ -1,9 +1,10 @@
-import { Worker } from "../LevelGuideWorker.js";
+import { Worker } from "../levelGuideWorker.js";
 import { GuideResultError } from "../types/index.js";
 
 const extraDisplayMaxCount = 3;
 
 export const printGuide = async (args: string, raw: boolean = true) => {
+	// Sonarlint said this thing has complexity of 200, well fuck that
 	const guideResult = await Worker.requestLevelGuide(args);
 	const guideFile: string[] = [];
 

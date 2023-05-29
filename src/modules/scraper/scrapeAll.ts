@@ -3,7 +3,6 @@ import "colors";
 import { App } from "../app.js";
 import { PomdexCollection } from "../database/index.js";
 import { ToramObject } from "../types/index.js";
-import Utils from "../utils/index.js";
 import { scrapeItem } from "./scrapeItem.js";
 import { scrapeMap } from "./scrapeMap.js";
 import { scrapeMonster } from "./scrapeMonster.js";
@@ -32,14 +31,14 @@ const scrapeAll = async () => {
 							id: res.id,
 						}).then(() =>
 							PomdexCollection.insertOne(res).then(() => {
-								Utils.info(`Saved ${res.id}`.green);
+								App.info(`Saved ${res.id}`.green);
 
 								done(null);
 							})
-						);
+						).catch(done);
 					})
 					.catch(() => {
-						Utils.error(`Not found ${type.slice(0, 1).toUpperCase()}${data.id}`.red);
+						App.error(`Not found ${type.slice(0, 1).toUpperCase()}${data.id}`.red);
 						notFoundIDs.push(`${type.slice(0, 1).toUpperCase()}${data.id}`);
 
 						done(null);
@@ -69,23 +68,25 @@ const scrapeAll = async () => {
 				type: {
 					$regex: regex,
 				},
-			}).then((count) => {
-				Utils.info(`Checking ${type} count ${count} / ${Math.floor(count + count * 0.1)}`.green);
+			})
+				.then((count) => {
+					App.info(`Checking ${type} count ${count} / ${Math.floor(count + count * 0.1)}`.green);
 
-				for (let id = Math.floor(count + count * 0.1); id > 0; id--) {
-					queues[type].push({ id });
-				}
-			});
+					for (let id = Math.floor(count + count * 0.1); id > 0; id--) {
+						queues[type].push({ id }).catch(done);
+					}
+				})
+				.catch(done);
 
 			queues[type].drain(done);
 		}),
 		() => {
-			Utils.info("Scrape completed".green);
-			Utils.error(`Failed list:`, notFoundIDs.join());
+			App.info("Scrape completed".green);
+			App.error("Failed list:", notFoundIDs.join());
 		}
 	);
 };
 
-const task2WeeklyScrapeAll = () => setInterval(scrapeAll, 86_400_000 * 14);
+const task2WeeklyScrapeAll = () => setInterval(() => scrapeAll, 86_400_000 * 14);
 
 export { task2WeeklyScrapeAll, scrapeAll };

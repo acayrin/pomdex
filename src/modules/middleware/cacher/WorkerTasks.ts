@@ -4,7 +4,8 @@ import { existsSync, mkdir, readFile, writeFile } from "fs";
 import { Context } from "hono";
 import { join } from "path";
 import { gunzip, gzip } from "zlib";
-import Utils from "../../utils/index.js";
+import { App } from "../../app.js";
+import { CachedPage } from "./index.js";
 import { AsyncNext } from "./types/AsyncNext.js";
 
 class WorkerTasks {
@@ -17,9 +18,11 @@ class WorkerTasks {
 	static taskCheckCacheDir(o: { cacheDirPath: string; next: AsyncNext }) {
 		if (existsSync(o.cacheDirPath)) {
 			o.next(null);
-		} else {
-			mkdir(o.cacheDirPath, o.next);
+
+			return;
 		}
+
+		mkdir(o.cacheDirPath, o.next);
 	}
 
 	/**
@@ -27,10 +30,10 @@ class WorkerTasks {
 	 * @param o options
 	 */
 	static taskReadCacheFile(o: { cacheDirPath: string; urlPathname: string; next: AsyncNext }) {
-		const path = join(o.cacheDirPath, Utils.hash(o.urlPathname));
+		const path = join(o.cacheDirPath, CachedPage.hash(o.urlPathname));
 		readFile(path, (error, buffer) => {
 			if (error) {
-				Utils.error("CACHE".yellow, `E1W: ${path}.`, "Possibly first time rendering.");
+				App.error("CACHE".yellow, `E1W: ${path}.`, "Possibly first time rendering.");
 			}
 
 			o.next(null, buffer);
@@ -45,7 +48,7 @@ class WorkerTasks {
 	static taskUnzipCacheFile(o: { cacheFile: Buffer | undefined; urlPathname: string; next: AsyncNext }) {
 		gunzip(o.cacheFile, { level: 9 }, (error, buffer) => {
 			if (error) {
-				Utils.error("CACHE".yellow, `E2W: ${o.urlPathname}.`, "Possible first time rendering");
+				App.error("CACHE".yellow, `E2W: ${o.urlPathname}.`, "Possible first time rendering");
 			}
 
 			o.next(null, buffer || o.cacheFile);
@@ -81,7 +84,7 @@ class WorkerTasks {
 				}
 			})
 			.catch((error) => {
-				Utils.error("CACHE".yellow, `Failed to generate buffer ${o.data.pathname}`.red, error);
+				App.error("CACHE".yellow, `Failed to generate buffer ${o.data.pathname}`.red, error);
 
 				o.next(error);
 			});
@@ -138,29 +141,33 @@ class WorkerTasks {
 		ignoreCache: boolean;
 		next: AsyncNext;
 	}) {
-		if (o.ignoreCache || Utils.hash(o.cachedContent || "") !== Utils.hash(o.newContent || "")) {
+		if (o.ignoreCache || CachedPage.hash(o.cachedContent || "") !== CachedPage.hash(o.newContent || "")) {
 			gzip(o.newContent, { level: 9 }, (error, result) => {
 				if (error) {
-					Utils.error("CACHE".yellow, `E3W: ${o.urlPathname}.`, "Failed to compress.", error);
+					App.error("CACHE".yellow, `E3W: ${o.urlPathname}.`, "Failed to compress.", error);
 
 					o.next(error);
-				} else {
-					writeFile(join(o.cacheDirPath, Utils.hash(o.urlPathname)), result, (error) => {
-						// Release
-						result = null;
 
-						if (error) {
-							Utils.error("CACHE".yellow, `E3W: ${o.urlPathname}.`, "Failed to write cache file.", error);
-
-							o.next(null);
-						} else {
-							o.next(null, {
-								message: `Cache updated for ${o.urlPathname}`,
-								status: 2,
-							});
-						}
-					});
+					return;
 				}
+
+				writeFile(join(o.cacheDirPath, CachedPage.hash(o.urlPathname)), result, (error) => {
+					// Release
+					result = null;
+
+					if (error) {
+						App.error("CACHE".yellow, `E3W: ${o.urlPathname}.`, "Failed to write cache file.", error);
+
+						o.next(null);
+
+						return;
+					}
+
+					o.next(null, {
+						message: `Cache updated for ${o.urlPathname}`,
+						status: 2,
+					});
+				});
 			});
 		} else {
 			o.next(null, {
@@ -175,35 +182,30 @@ class WorkerTasks {
 	 * @param o options
 	 * @returns Response body as string
 	 */
-	static fnGenerateNewContent = (o: {
+	static fnGenerateNewContent = async (o: {
 		context: Context;
 		pathname: string;
 		cachePath: string;
 		resolvedMap: Map<string | RegExp, (c: Context) => Promise<Response>>;
-	}): Promise<string | Response> =>
-		new Promise((resolve, reject) =>
-			// prettier-ignore
-			Array.from(o.resolvedMap.entries())
-				.sort((a, b) => b[0].toString().length - a[0].toString().length)
-				.find(([reg]) => (typeof reg !== "string" && reg.test(o.pathname)) || reg === o.pathname)
-				?.[1](o.context)
-				?.then((response) => {
-					response.text()?.then((newContent) => {
-						if (newContent.length === 0) {
-							return resolve(response);
-						}
+	}): Promise<string | Response> => {
+		const fn: (c: Context) => Promise<Response> = Array.from(o.resolvedMap.entries())
+			.sort((a, b) => b[0].toString().length - a[0].toString().length)
+			.find(([reg]) => (typeof reg !== "string" && reg.test(o.pathname)) || reg === o.pathname)?.[1];
 
-						try {
-							JSON.parse(newContent);
+		const response = await fn(o.context);
+		const newContent = await response.text();
+		if (newContent.length === 0) {
+			return response;
+		}
 
-							resolve(newContent);
-						} catch {
-							this.#Critters.process(newContent).then(resolve).catch(reject);
-						}
-					});
-				})
-				?.catch(reject)
-		);
+		try {
+			JSON.parse(newContent);
+
+			return newContent;
+		} catch {
+			return await this.#Critters.process(newContent);
+		}
+	};
 }
 
 export { WorkerTasks };

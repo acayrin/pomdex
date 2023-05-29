@@ -1,15 +1,17 @@
 import async from "async";
 import "colors";
+import { createHash } from "crypto";
 import type { Context, Next } from "hono";
 import { App } from "../../app.js";
-import Utils from "../../utils/index.js";
-import { Tasks } from "./MainTasks.js";
+import { Tasks } from "./mainTasks.js";
 import { AcceptEncoding } from "./types/AcceptEncoding.js";
 import { AsyncNext } from "./types/AsyncNext.js";
-import { WorkerTasks } from "./WorkerTasks.js";
+import { WorkerTasks } from "./workerTasks.js";
 
-export default class CachedPage {
+export class CachedPage {
 	static readonly UserAgent = "Hono - CachedPage";
+	static hash = (input: string | NodeJS.ArrayBufferView, algorithm = "md5"): string =>
+		createHash(algorithm).update(input).digest("hex");
 
 	constructor(
 		app: App,
@@ -40,10 +42,10 @@ export default class CachedPage {
 	#cacheIgnoreCompress: RegExp[] = [];
 
 	#cacheWorkerQueue: async.QueueObject<{
-		context: Context<any, any, {}>;
+		context: Context<unknown, string, {}>;
 		pathname: string;
 		cachePath: string;
-		resolvedMap: Map<string | RegExp, (c: Context<any, any, {}>) => Promise<Response>>;
+		resolvedMap: Map<string | RegExp, (c: Context<unknown, string, {}>) => Promise<Response>>;
 		ignoreCache: boolean;
 	}> = async.queue((o, next) => {
 		this.#workerTasksCheckTask(o)
@@ -52,20 +54,20 @@ export default class CachedPage {
 					case "all": {
 						switch (recieved?.status) {
 							case 1:
-								Utils.info("CACHE".green, recieved.message);
+								App.info("CACHE".green, recieved.message);
 								break;
 							case 2:
-								Utils.info("CACHE".yellow, recieved.message);
+								App.info("CACHE".yellow, recieved.message);
 								break;
 							case 3:
-								Utils.info("CACHE".green, recieved.message);
+								App.info("CACHE".green, recieved.message);
 								break;
 						}
 						break;
 					}
 					case "change": {
 						if (recieved.status === 2) {
-							Utils.info("CACHE".yellow, recieved.message);
+							App.info("CACHE".yellow, recieved.message);
 						}
 						break;
 					}
@@ -74,7 +76,7 @@ export default class CachedPage {
 				next(null);
 			})
 			.catch((error) => {
-				Utils.error(error);
+				App.error(error);
 
 				next(error);
 			});
@@ -99,7 +101,7 @@ export default class CachedPage {
 			// Check for (re)building cache
 			// Add path to preload queue
 			if (context.req.header("User-Agent") === CachedPage.UserAgent && context.req.header("Rebuild-Cache")) {
-				this.#workerTasksPush(context, path, true);
+				this.#workerTasksPush(context, path, true).catch(console.error);
 
 				return resolve(context.text("OK"));
 			}
@@ -111,7 +113,7 @@ export default class CachedPage {
 
 			// Ignore compression, push check task and proceed to matching routes
 			if (this.#cacheIgnoreCompress.some((r) => new RegExp(r).test(path))) {
-				this.#workerTasksPush(context, path);
+				this.#workerTasksPush(context, path).catch(console.error);
 
 				return resolve(Next());
 			}
@@ -119,7 +121,7 @@ export default class CachedPage {
 			async.waterfall(
 				[
 					// [ Get encoding ]
-					(next: (err: Error, ...args: any) => void) => {
+					(next: (err: Error, ...args: unknown[]) => void) => {
 						Tasks.taskGetEncoding({
 							context,
 							next,
@@ -127,7 +129,7 @@ export default class CachedPage {
 					},
 
 					// [ Get cached content if any ]
-					(acceptEncoding: AcceptEncoding, next: (err: Error, ...args: any) => void) => {
+					(acceptEncoding: AcceptEncoding, next: (err: Error, ...args: unknown[]) => void) => {
 						Tasks.taskGetCachedContent({
 							urlPathname: path,
 							cacheDirPath: this.#cachePath,
@@ -142,7 +144,7 @@ export default class CachedPage {
 					(
 						cachedContent: Buffer,
 						acceptEncoding: AcceptEncoding,
-						next: (err: Error, ...args: any) => void
+						next: (err: Error, ...args: unknown[]) => void
 					) => {
 						Tasks.taskGenNewIfNotCached({
 							context,
@@ -161,7 +163,7 @@ export default class CachedPage {
 						cachedContent: Buffer,
 						acceptEncoding: AcceptEncoding,
 						responseOverride: Response,
-						next: (err: Error, ...args: any) => void
+						next: (err: Error, ...args: unknown[]) => void
 					) => {
 						Tasks.taskUnzipCachedContent({
 							context,
@@ -179,7 +181,7 @@ export default class CachedPage {
 						acceptEncoding: AcceptEncoding,
 						contentType: "html" | "json",
 						responseOverride: Response,
-						next: (err: Error, ...args: any) => void
+						next: (err: Error, ...args: unknown[]) => void
 					) => {
 						Tasks.taskCompressResponseBody({
 							body,
@@ -192,7 +194,7 @@ export default class CachedPage {
 					},
 
 					// [ Finalize response ]
-					(response: Response, next: (err: Error, ...args: any) => void) => {
+					(response: Response, next: (err: Error, ...args: unknown[]) => void) => {
 						Tasks.taskFinalizeResponse({
 							response,
 							urlPathname: path,
@@ -212,7 +214,7 @@ export default class CachedPage {
 						// Only push cache task if not ignored by rules
 						if (!this.#cacheIgnoreCaching.some((r) => new RegExp(r).test(path))) {
 							// Push check cached content task
-							this.#workerTasksPush(context, path);
+							this.#workerTasksPush(context, path).catch(console.error);
 						}
 					}
 				}
@@ -228,7 +230,7 @@ export default class CachedPage {
 					this.#cacheResolveRules.set(path.length === 0 ? "/" : path, app.froutes.get(path));
 				}
 
-				const matchWithParams = `${path}/`.match(new RegExp(/:[^\/]*(?=\/)/gi))?.at(0);
+				const matchWithParams = `${path}/`.match(new RegExp(/:[^/]*(?=\/)/gi))?.at(0);
 				if (matchWithParams) {
 					this.#cacheResolveRules.set(new RegExp(path.replace(matchWithParams, ".+")), app.froutes.get(path));
 				}

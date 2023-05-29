@@ -1,5 +1,5 @@
 import { Account, MonthlyDyeEntry, ToramObject } from "../types/index.js";
-import Utils from "../utils/index.js";
+import { App } from "../app.js";
 import { Database } from "./database.js";
 
 const PomdexDatabase = new Database();
@@ -12,14 +12,14 @@ const taskConnectDatabase = () =>
 		PomdexDatabase.connect()
 			.then(async () => {
 				// Create index when needed
-				if (!PomdexCollection.indexExists("name")) {
+				if (!(await PomdexCollection.indexExists("name"))) {
 					await PomdexCollection.createIndex({ name: "text" });
 				}
 
-				Utils.info("Database connected".green);
+				App.info("Database connected".green);
 				resolve(true);
 			})
-			.catch(Utils.error);
+			.catch(App.error);
 	});
 
 export { PomdexDatabase, PomdexCollection, PomdexAccounts, PomdexMonthlyDye, taskConnectDatabase };

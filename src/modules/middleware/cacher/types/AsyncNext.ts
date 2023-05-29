@@ -1,1 +1,1 @@
-export type AsyncNext = (error?: Error, ...args: any) => void;
+export type AsyncNext = (error?: Error, ...args: unknown[]) => void;

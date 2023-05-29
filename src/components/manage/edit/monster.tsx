@@ -57,12 +57,13 @@ export const ManageEditMonster = (props: { entry?: ToramMonster }) => {
 						{ToramTamable.map((state) =>
 							entry?.tamable === state ? (
 								<option
+									key={state}
 									value={state}
 									selected>
 									{state}
 								</option>
 							) : (
-								<option value={state}>{state}</option>
+								<option key={state} value={state}>{state}</option>
 							)
 						)}
 					</select>
@@ -75,12 +76,13 @@ export const ManageEditMonster = (props: { entry?: ToramMonster }) => {
 						{ToramElements.map((element) =>
 							entry?.ele.includes(element) ? (
 								<option
+									key={element}
 									value={element}
 									selected>
 									{element}
 								</option>
 							) : (
-								<option value={element}>{element}</option>
+								<option key={element} value={element}>{element}</option>
 							)
 						)}
 					</select>

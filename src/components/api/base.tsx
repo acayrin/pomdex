@@ -1,8 +1,8 @@
 import { Context } from "hono";
 import { PomdexCollection } from "../../modules/database/index.js";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { printGuide } from "../../modules/leveling/functions/printGuide.js";
 import Search from "../../modules/search/query.js";
-import { Helmet } from "../_base/helmet.js";
 
 export const BaseApiFrontend = async (props: { c: Context }) => (
 	<>

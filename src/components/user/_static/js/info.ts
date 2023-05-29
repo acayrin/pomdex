@@ -7,7 +7,7 @@
 	const responseMessagePass = document.getElementById("response_message_password") as HTMLDivElement;
 	const responseMessageInfo = document.getElementById("response_message_info") as HTMLDivElement;
 
-	btnSubmitPass.addEventListener("click", async () => {
+	btnSubmitPass.addEventListener("click", () => {
 		const inputPassword = (document.getElementById("info_password") as HTMLInputElement).value;
 		const inputPasswordConfirm = (document.getElementById("info_password_confirm") as HTMLInputElement).value;
 		const displayMessage = (message: string) => {
@@ -28,23 +28,27 @@
 		if (inputPassword !== inputPasswordConfirm) {
 			return displayMessage("Password mismatched");
 		}
-		fetch("/api/user/update", {
-			method: "POST",
-			body: JSON.stringify({
-				data: {
-					// @ts-ignore
-					password: await getSHA256Hash(inputPassword),
-				},
-			}),
-		})
-			.then((res) => res.json())
-			.then((res) => {
-				displayMessage(res.message);
-				if (res.error) console.error(res.error);
-			});
+
+		// @ts-ignore
+		getSHA256Hash(inputPassword).then((hashedPassword: string) => {
+			fetch("/api/user/update", {
+				method: "POST",
+				body: JSON.stringify({
+					data: {
+						password: hashedPassword,
+					},
+				}),
+			})
+				.then((res) => res.json())
+				.then((res) => {
+					displayMessage(res.message);
+					if (res.error) console.error(res.error);
+				})
+				.catch(console.error);
+		});
 	});
 
-	btnSubmitInfo.addEventListener("click", async () => {
+	btnSubmitInfo.addEventListener("click", () => {
 		const inputEmail = (document.getElementById("info_email_address") as HTMLInputElement).value;
 		const displayMessage = (message: string) => {
 			btnSubmitPass.classList.remove("disabled");
@@ -70,6 +74,7 @@
 			.then((res) => {
 				displayMessage(res.message);
 				if (res.error) console.error(res.error);
-			});
+			})
+			.catch(console.error);
 	});
 }

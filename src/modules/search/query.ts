@@ -46,15 +46,16 @@ export default class Search {
 		const searchQuery = searchOptions.queryArray.length > 0 ? searchOptions.queryArray.join(" ").trim() : "*";
 
 		// check if query is an ID
-		const matchId = searchQuery.match(new RegExp(regexParseID))?.[0];
-		if (matchId) {
+		const isQueryIdMatched = RegExp(new RegExp(regexParseID)).exec(searchQuery)?.[0];
+		if (isQueryIdMatched) {
 			return {
 				list: [
-					...((await PomdexCollection.find({
-						id: matchId.toUpperCase(),
-					})
-						.project({ _id: 0 })
-						.toArray()) as ToramObject[]),
+					...((await PomdexCollection.find(
+						{
+							id: isQueryIdMatched.toUpperCase(),
+						},
+						{ projection: { _id: 0 } }
+					).toArray()) as ToramObject[]),
 				],
 			};
 		}
@@ -90,9 +91,7 @@ export default class Search {
 		}
 
 		// create a result cursor
-		const cursor = PomdexCollection.find(queryCondition, {
-			allowDiskUse: true,
-		})
+		const cursor = PomdexCollection.find(queryCondition)
 			.limit(searchOptions.limit > 0 ? searchOptions.limit : 50)
 			.skip(searchOptions.page * 50);
 		if (queryCondition.$text) {
@@ -111,18 +110,18 @@ export default class Search {
 	 * @param inputString Input command
 	 */
 	static #processCommand = (inputString: string, searchOptions: SearchOptions) => {
-		const searchPartials = inputString.match(new RegExp(regexParseArguments));
+		const searchArguments = RegExp(new RegExp(regexParseArguments)).exec(inputString);
+		let searchSingleArgument: string;
 
-		let partial: string;
-		while ((partial = searchPartials.shift())) {
-			switch (partial) {
+		while ((searchSingleArgument = searchArguments.shift())) {
+			switch (searchSingleArgument) {
 				// filter items by type
 				case "-t":
 				case "--type": {
-					const value = searchPartials.shift();
+					const value = searchArguments.shift();
 
 					if (!value) {
-						throw new Error(`Missing argument after **${partial}**`);
+						throw new Error(`Missing argument after **${searchSingleArgument}**`);
 					}
 
 					searchOptions.types.push(...value.replace(/"/g, "").split(";"));
@@ -132,10 +131,10 @@ export default class Search {
 				// filter items by stats
 				case "-f":
 				case "--filter": {
-					const value = searchPartials.shift();
+					const value = searchArguments.shift();
 
 					if (!value) {
-						throw new Error(`Missing argument after **${partial}**`);
+						throw new Error(`Missing argument after **${searchSingleArgument}**`);
 					}
 
 					searchOptions.filters.push(...value.replace(/"/g, "").split(";"));
@@ -144,7 +143,7 @@ export default class Search {
 				}
 				case "-p":
 				case "--page": {
-					const value = searchPartials.shift();
+					const value = searchArguments.shift();
 
 					searchOptions.page = Math.abs((Number(value) || 1) - 1);
 
@@ -152,10 +151,10 @@ export default class Search {
 				}
 				case "-l":
 				case "--limit": {
-					const value = searchPartials.shift();
+					const value = searchArguments.shift();
 
 					if (!value) {
-						throw new Error(`Missing argument after **${partial}**`);
+						throw new Error(`Missing argument after **${searchSingleArgument}**`);
 					}
 
 					searchOptions.limit = Number(value);
@@ -163,7 +162,7 @@ export default class Search {
 					break;
 				}
 				default:
-					searchOptions.queryArray.push(partial);
+					searchOptions.queryArray.push(searchSingleArgument);
 			}
 		}
 	};
@@ -196,7 +195,9 @@ export default class Search {
 				.split(/[<>=]{1,2}/)
 				.pop()
 				.trim();
-			const filterComparator = filter.match(/[<>=]{1,2}/).shift();
+			const filterComparator = RegExp(/[<>=]{1,2}/)
+				.exec(filter)
+				.shift();
 			const filterAttribute = filter
 				.split(/[<>=]{1,2}/)
 				.shift()

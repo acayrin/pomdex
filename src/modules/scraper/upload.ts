@@ -1,5 +1,5 @@
+import { App } from "../app.js";
 import ky from "ky";
-import Utils from "../utils/index.js";
 
 export const uploadFile = async (buffer: Buffer, filename?: string): Promise<string> => {
 	filename ||= `${Date.now()}.jpg`;
@@ -7,7 +7,7 @@ export const uploadFile = async (buffer: Buffer, filename?: string): Promise<str
 	try {
 		return await uploadFileDiscord(buffer, filename);
 	} catch {
-		Utils.error(`Failed to upload file ${filename}, retrying in 60 seconds`);
+		App.error(`Failed to upload file ${filename}, retrying in 60 seconds`);
 
 		await new Promise((res) => {
 			setTimeout(res, 60e3);
@@ -143,7 +143,6 @@ const uploadFileGofile = async (buffer: Buffer, filename?: string): Promise<stri
 	const formData = new FormData();
 	formData.append("file", file);
 	formData.append("token", process.env.GOFILE_TOKEN);
-	//formData.append("folderId", process.env.GOFILE_FOLDER);
 	const goUpload: {
 		status: string;
 		data: {
@@ -178,7 +177,7 @@ const uploadFilePutre = async (buffer: Buffer, filename: string) => {
 	);
 
 	const r: { data: { url: string } } = await (
-		await ky(`https://api.put.re/upload`, {
+		await ky("https://api.put.re/upload", {
 			method: "post",
 			body: formData,
 		})

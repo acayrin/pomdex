@@ -30,8 +30,8 @@ export class Precompile {
 	): Promise<string | TemplateStringsArray> {
 		return new Promise((resolve, reject) =>
 			compileAsync(path)
-				.then((res) => {
-					return transform(
+				.then((res) =>
+					transform(
 						res.css,
 						esbuildOptions || {
 							loade: "css",
@@ -42,8 +42,8 @@ export class Precompile {
 						.then((res) => {
 							resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code);
 						})
-						.catch(reject);
-				})
+						.catch(reject)
+				)
 				.catch(reject)
 		);
 	}
@@ -123,7 +123,9 @@ export class Precompile {
 						minify: true,
 						legalComments: "external",
 					}
-				).then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code));
+				)
+					.then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code))
+					.catch(console.error);
 			});
 		});
 	}
@@ -161,7 +163,9 @@ export class Precompile {
 						minify: true,
 						legalComments: "external",
 					}
-				).then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code));
+				)
+					.then((res) => resolve(inline ? html(res.code as unknown as TemplateStringsArray) : res.code))
+					.catch(console.error);
 			});
 		});
 	}

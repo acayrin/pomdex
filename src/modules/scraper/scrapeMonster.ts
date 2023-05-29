@@ -117,5 +117,6 @@ export const scrapeMonster = (id = 1): Promise<ToramMonster> =>
 					});
 
 				return resolve(monsterObject);
-			});
+			})
+			.catch(reject);
 	});

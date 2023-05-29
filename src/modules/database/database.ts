@@ -1,7 +1,7 @@
 import "colors";
-import { Db, MongoClient } from "mongodb";
-import Utils from "../utils/index.js";
 import dotenv from "dotenv";
+import { Db, MongoClient } from "mongodb";
+import { App } from "../app.js";
 dotenv.config();
 
 export class Database extends MongoClient {
@@ -10,8 +10,8 @@ export class Database extends MongoClient {
 
 	constructor() {
 		super(
-			process.env.MONGODB_URL.replace(/\%user\%/gi, process.env.MONGODB_USER).replace(
-				/\%password\%/gi,
+			process.env.MONGODB_URL.replace(/%user%/gi, process.env.MONGODB_USER).replace(
+				/%password%/gi,
 				encodeURIComponent(process.env.MONGODB_PASSWORD)
 			),
 			{
@@ -25,10 +25,10 @@ export class Database extends MongoClient {
 			this.connected = true;
 		});
 		this.on("error", (err) => {
-			Utils.error(err);
+			App.error(err);
 		});
 		this.on("timeout", () => {
-			Utils.error("Task timed out");
+			App.error("Task timed out");
 		});
 	}
 
@@ -56,7 +56,8 @@ export class Database extends MongoClient {
 					} else {
 						reject(false);
 					}
-				});
+				})
+				.catch(reject);
 		});
 	}
 
@@ -71,7 +72,8 @@ export class Database extends MongoClient {
 					} else {
 						reject(false);
 					}
-				});
+				})
+				.catch(reject);
 		});
 	}
 }

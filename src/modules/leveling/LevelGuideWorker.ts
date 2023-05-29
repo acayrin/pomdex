@@ -1,9 +1,10 @@
 import "colors";
+import { createHash } from "crypto";
 import { cpus } from "os";
+import { App } from "../app.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Worker } from "worker_threads";
-import Utils from "../utils/index.js";
 import { GuideResult, GuideResultSuccess } from "./types/index.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -53,7 +54,7 @@ class LevelGuideWorker {
 
 			const i = index || Math.floor(Math.random() * this.#workers.length);
 			const wk = this.#workers.at(i);
-			Utils.info("LEVEL".cyan, `Requesting worker #${wk.id}.`.gray);
+			App.info("LEVEL".cyan, `Requesting worker #${wk.id}.`.gray);
 
 			wk.taskCount++;
 			wk.lastTaskTime = Date.now() + this.#opts.timeout;
@@ -73,14 +74,14 @@ class LevelGuideWorker {
 	static #allocateWorkers = () => {
 		if (this.#workers.length >= this.#opts.maxWorkers) return;
 
-		Utils.info("LEVEL".cyan, `Allocating ${this.#opts.maxWorkers - this.#workers.length} workers.`.gray);
+		App.info("LEVEL".cyan, `Allocating ${this.#opts.maxWorkers - this.#workers.length} workers.`.gray);
 
 		for (let i = this.#workers.length; i < this.#opts.maxWorkers; i++) {
 			this.#workers.push({
-				id: Utils.hash(Date.now().toString()).slice(0, 4),
+				id: createHash("md5").update(Date.now().toString()).digest("hex").slice(0, 4),
 				taskCount: 0,
 				lastTaskTime: Date.now() + this.#opts.timeout,
-				workerInstance: new Worker(join(__dirname, "./LevelGuide.js")),
+				workerInstance: new Worker(join(__dirname, "./levelGuideGenerator.js")),
 			});
 		}
 	};
@@ -88,9 +89,12 @@ class LevelGuideWorker {
 	static #terminateWorker = (i: number) => {
 		const wk = Object.assign({}, this.#workers.splice(i, 1).at(0));
 
-		wk.workerInstance.terminate().then(() => {
-			Utils.info("LEVEL".cyan, `Worker #${wk.id} terminated.`.gray);
-		});
+		wk.workerInstance
+			.terminate()
+			.then(() => {
+				App.info("LEVEL".cyan, `Worker #${wk.id} terminated.`.gray);
+			})
+			.catch(console.error);
 	};
 
 	static #interval = setInterval(() => {

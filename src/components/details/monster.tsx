@@ -2,8 +2,8 @@ import { ColorMapping, getInvertedColor } from "../../modules/color/index.js";
 import { PomdexMonthlyDye } from "../../modules/database/index.js";
 import Search from "../../modules/search/query.js";
 import { ToramMonster } from "../../modules/types/ToramMonster.js";
-import { getElementColor } from "../../modules/utils/getElementColor.js";
-import { getItemTypeIcon } from "../../modules/utils/getItemTypeIcon.js";
+import { getElementColor } from "../../modules/element_funcs/getElementColor.js";
+import { getItemTypeIcon } from "../../modules/element_funcs/getItemTypeIcon.js";
 
 export const MonsterDetails = async (props: { item: ToramMonster }) => {
 	const { item } = props;
@@ -79,20 +79,18 @@ export const MonsterDetails = async (props: { item: ToramMonster }) => {
 					<b>Monthly dye drop:</b>
 					<div>
 						{["A", "B", "C"].map((slot, index) => {
-							const code: any =
-								monthlyDyeEntry.slot === slot
-									? monthlyDyeEntry.code
-									: index === 0
-									? "A"
-									: index === 1
-									? "B"
-									: "C";
+							let code: "A" | "B" | "C" | number =
+								monthlyDyeEntry.slot === slot ? monthlyDyeEntry.code : "C";
+							if (index === 0) code = "A";
+							else if (index === 1) code = "B";
+
 							return (
 								<span
+									key={code}
 									class="color-block"
 									style={[
-										`background: #${ColorMapping.get(code)}`,
-										`color: #${getInvertedColor(ColorMapping.get(code))}`,
+										`background: #${ColorMapping.get(code as number)}`,
+										`color: #${getInvertedColor(ColorMapping.get(code as number))}`,
 									].join(";")}>
 									<b>{code}</b>
 								</span>
@@ -110,7 +108,9 @@ export const MonsterDetails = async (props: { item: ToramMonster }) => {
 							const dropItem = (await Search.query(drop.id, true)).list.pop();
 
 							return (
-								<div class="col s12">
+								<div
+									class="col s12"
+									key={drop.id}>
 									<div class="col s6">
 										{getItemTypeIcon(dropItem.type)}
 										<a href={dropItem ? `/details/${drop.id}` : "#"}>{dropItem?.name || drop.id}</a>
@@ -119,6 +119,7 @@ export const MonsterDetails = async (props: { item: ToramMonster }) => {
 									<div class="col s3">
 										{drop.dyes?.map((dye) => (
 											<span
+												key={dye}
 												class="color-block"
 												style={[
 													`background: #${ColorMapping.get(Number(dye))}`,

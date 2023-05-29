@@ -1,17 +1,22 @@
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { ColorMapping, getInvertedColor } from "../../modules/color/index.js";
+import { getElementColor } from "../../modules/element_funcs/getElementColor.js";
+import { getItemTypeIcon } from "../../modules/element_funcs/getItemTypeIcon.js";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { Precompile } from "../../modules/precompile/index.js";
 import Search from "../../modules/search/query.js";
 import { ToramItem } from "../../modules/types/ToramItem.js";
-import { getElementColor } from "../../modules/utils/getElementColor.js";
-import { getItemTypeIcon } from "../../modules/utils/getItemTypeIcon.js";
-import Utils from "../../modules/utils/index.js";
-import { Helmet } from "../_base/helmet.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export const ItemDetails = async (props: { item: ToramItem }) => {
-	const { item } = props;
+const extractItemBaseStat = (
+	item: ToramItem
+): {
+	atk?: number;
+	def?: number;
+	sta?: number;
+	ele?: string;
+} => {
 	const itemBaseStat = {
 		atk: undefined,
 		def: undefined,
@@ -22,28 +27,119 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 	for (const stat of item.stats) {
 		if (stat.name.includes("Base ATK")) {
 			itemBaseStat.atk = Number(stat.val);
-			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+			item.stats = item.stats.filter((s) => s.name !== stat.name);
 		}
 		if (stat.name.includes("Base Stability")) {
 			itemBaseStat.sta = Number(stat.val);
-			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+			item.stats = item.stats.filter((s) => s.name !== stat.name);
 		}
 		if (stat.name.includes("Base DEF")) {
 			itemBaseStat.def = Number(stat.val);
-			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+			item.stats = item.stats.filter((s) => s.name !== stat.name);
 		}
 		if (stat.name.includes("Element")) {
 			itemBaseStat.ele = stat.name;
-			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+			item.stats = item.stats.filter((s) => s.name !== stat.name);
 		}
 	}
+
+	return itemBaseStat;
+};
+
+const renderItemBaseStat = (itemBaseStat: { atk?: number; def?: number; sta?: number; ele?: string }) =>
+	itemBaseStat.atk ? (
+		<>
+			{" "}
+			@ <b>ATK {itemBaseStat.atk}</b> ({itemBaseStat.sta}%)
+		</>
+	) : (
+		itemBaseStat.def && (
+			<>
+				{" "}
+				@ <b>DEF {itemBaseStat.def}</b>
+			</>
+		)
+	);
+
+const renderMaterialItem = async (material: { amount: number; item: string }) => {
+	const materialItem = (await Search.query(material.item, true)).list.pop();
+
+	return (
+		<div
+			key={material.item}
+			class="col s12">
+			<div class="col s6">
+				{getItemTypeIcon(materialItem?.type)}
+				<a href={materialItem ? `/details/${material.item}` : "#"}>{materialItem?.name || material.item}</a>
+			</div>
+			<div class="col s3">{materialItem?.type || "Unknown"}</div>
+			<div class="col s3">
+				x<b>{material.amount}</b>
+			</div>
+		</div>
+	);
+};
+
+const renderItemUsage = async (use: { for: string; amount: number }) => {
+	const useItem = (await Search.query(use.for, true)).list.pop();
+
+	return (
+		<div
+			key={useItem.id}
+			class="col s12">
+			<div class="col s6">
+				{getItemTypeIcon(useItem?.type)}
+				<a href={useItem ? `/details/${use.for}` : "#"}>{useItem?.name || use.for}</a>{" "}
+			</div>
+			<div class="col s3">{useItem?.type || "Unknown"}</div>
+			<div class="col s3">
+				x<b>{use.amount}</b>
+			</div>
+		</div>
+	);
+};
+
+const renderDropItem = async (drop: { from: string; dyes: string[] }) => {
+	const monsterItem = (await Search.query(drop.from, true)).list.pop();
+
+	return (
+		<div
+			key={drop.from}
+			class="col s12">
+			<div class="col s6">
+				{getItemTypeIcon(monsterItem?.type || drop.from)}
+				<a href={monsterItem ? `/details/${drop.from}` : "#"}>{monsterItem?.name || drop.from}</a>
+			</div>
+			<div class="col s3">
+				{monsterItem?.type || new RegExp(/skill/gi).test(drop.from) ? "Player Skill" : "NPC"}
+			</div>
+			<div class="col s3">
+				{drop.dyes?.map((dye) => (
+					<span
+						key={dye}
+						class="color-block"
+						style={[
+							`background: #${ColorMapping.get(Number(dye))}`,
+							`color: #${getInvertedColor(ColorMapping.get(Number(dye)))}`,
+						].join(";")}>
+						<b>{dye}</b>
+					</span>
+				))}
+			</div>
+		</div>
+	);
+};
+
+export const ItemDetails = async (props: { item: ToramItem }) => {
+	const { item } = props;
+	const itemBaseStat = extractItemBaseStat(item);
 
 	const crystaUpgradeTo: ToramItem[] = [];
 	for (const usage of item.uses) {
 		const possibleItem = (await Search.query(usage.for)).list.find((entry) => entry.id !== item.id);
 
 		if (new RegExp(/crysta/i).test(possibleItem?.type)) {
-			item.uses = Utils.filter(item.uses, (u) => u.for !== usage.for);
+			item.uses = item.uses.filter((u) => u.for !== usage.for);
 			crystaUpgradeTo.push(possibleItem as ToramItem);
 		}
 	}
@@ -55,7 +151,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 		const possibleItem = (await Search.query(`${stat.val} -t crysta`)).list.find((entry) => entry.id !== item.id);
 
 		if (possibleItem) {
-			item.stats = Utils.filter(item.stats, (s) => s.name !== stat.name);
+			item.stats = item.stats.filter((s) => s.name !== stat.name);
 			crystaUpgradeFor.push(possibleItem as ToramItem);
 		}
 	}
@@ -76,19 +172,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 				<div>
 					{getItemTypeIcon(item.type)}
 					{item.type}
-					{itemBaseStat.atk ? (
-						<>
-							{" "}
-							@ <b>ATK {itemBaseStat.atk}</b> ({itemBaseStat.sta}%)
-						</>
-					) : itemBaseStat.def ? (
-						<>
-							{" "}
-							@ <b>DEF {itemBaseStat.def}</b>
-						</>
-					) : (
-						""
-					)}
+					{renderItemBaseStat(itemBaseStat)}
 				</div>
 			</div>
 
@@ -132,7 +216,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 				<div class="item-stat col s6">
 					<b>Crysta Upgrade for:</b>
 					{crystaUpgradeFor.map((crysta) => (
-						<div>
+						<div key={crysta.id}>
 							{getItemTypeIcon("crysta")}
 							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
 						</div>
@@ -144,7 +228,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 				<div class="item-stat col s6">
 					<b>Crysta Upgrade to:</b>
 					{crystaUpgradeTo.map((crysta) => (
-						<div>
+						<div key={crysta.id}>
 							{getItemTypeIcon("crysta")}
 							<a href={`/details/${crysta.id}`}>{crysta.name}</a>
 						</div>
@@ -158,7 +242,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 				<div class="item-stat col s6">
 					<b>Item stats:</b>
 					{item.stats?.map((stat) => (
-						<div>
+						<div key={stat.name}>
 							{stat.name} <b>{stat.val}</b>
 						</div>
 					))}
@@ -184,26 +268,7 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 						<b>Materials: </b>
 					</div>
 					<div class="item-stat">
-						{await Promise.all(
-							item.recipe.materials?.map(async (material) => {
-								const materialItem = (await Search.query(material.item, true)).list.pop();
-
-								return (
-									<div class="col s12">
-										<div class="col s6">
-											{getItemTypeIcon(materialItem?.type)}
-											<a href={materialItem ? `/details/${material.item}` : "#"}>
-												{materialItem?.name || material.item}
-											</a>
-										</div>
-										<div class="col s3">{materialItem?.type || "Unknown"}</div>
-										<div class="col s3">
-											x<b>{material.amount}</b>
-										</div>
-									</div>
-								);
-							})
-						)}
+						{await Promise.all(item.recipe.materials?.map((material) => renderMaterialItem(material)))}
 					</div>
 				</div>
 			)}
@@ -211,69 +276,17 @@ export const ItemDetails = async (props: { item: ToramItem }) => {
 			{item.uses?.length > 0 && (
 				<div class="item-stat col s6">
 					<b>Item usages:</b>
-					{await Promise.all(
-						item.uses?.map(async (use) => {
-							const useItem = (await Search.query(use.for, true)).list.pop();
-
-							return (
-								<div class="col s12">
-									<div class="col s6">
-										{getItemTypeIcon(useItem?.type)}
-										<a href={useItem ? `/details/${use.for}` : "#"}>
-											{useItem?.name || use.for}
-										</a>{" "}
-									</div>
-									<div class="col s3">{useItem?.type || "Unknown"}</div>
-									<div class="col s3">
-										x<b>{use.amount}</b>
-									</div>
-								</div>
-							);
-						})
-					)}
+					{await Promise.all(item.uses?.map((use) => renderItemUsage(use)))}
 				</div>
 			)}
 
 			{item.drops?.length > 0 && (
 				<div class={`item-stat col ${item.drops?.length > 8 ? "s12" : "s6"}`}>
 					<b>Obtainable from:</b>
-					{await Promise.all(
-						item.drops?.map(async (drop) => {
-							const monsterItem = (await Search.query(drop.from, true)).list.pop();
-
-							return (
-								<div class="col s12">
-									<div class="col s6">
-										{getItemTypeIcon(monsterItem?.type || drop.from)}
-										<a href={monsterItem ? `/details/${drop.from}` : "#"}>
-											{monsterItem?.name || drop.from}
-										</a>
-									</div>
-									<div class="col s3">
-										{monsterItem
-											? monsterItem.type
-											: new RegExp(/skill/gi).test(drop.from)
-											? "Player Skill"
-											: "NPC"}
-									</div>
-									<div class="col s3">
-										{drop.dyes?.map((dye) => (
-											<span
-												class="color-block"
-												style={[
-													`background: #${ColorMapping.get(Number(dye))}`,
-													`color: #${getInvertedColor(ColorMapping.get(Number(dye)))}`,
-												].join(";")}>
-												<b>{dye}</b>
-											</span>
-										))}
-									</div>
-								</div>
-							);
-						})
-					)}
+					{await Promise.all(item.drops?.map((drop) => renderDropItem(drop)))}
 				</div>
 			)}
+
 			<Helmet.styles.Push>{Precompile.sass(join(__dirname, "./_static/css/base.scss"))}</Helmet.styles.Push>
 		</div>
 	);

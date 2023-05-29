@@ -1,8 +1,8 @@
 import { html } from "hono/html";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { Precompile } from "../../modules/precompile/index.js";
-import { Helmet } from "../_base/helmet.js";
 import { ManageEditItem } from "./edit/item.js";
 import { ManageEditMap } from "./edit/map.js";
 import { ManageEditMonster } from "./edit/monster.js";
@@ -70,7 +70,11 @@ export const BaseManageNew = () => (
 							id="edit_type"
 							class="browser-default grey darken-4">
 							{ToramEntryType.map((type) => (
-								<option value={type}>{type}</option>
+								<option
+									key={type}
+									value={type}>
+									{type}
+								</option>
 							))}
 						</select>
 					</div>

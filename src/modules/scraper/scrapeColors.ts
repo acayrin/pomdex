@@ -1,8 +1,8 @@
 import { load } from "cheerio";
+import { App } from "../app.js";
 import ky from "ky";
 import { PomdexMonthlyDye } from "../database/index.js";
 import { MonthlyDyeListEntry } from "../types/index.js";
-import Utils from "../utils/index.js";
 
 const intentionalTypoList = [
 	["selle", "Seele"],
@@ -28,7 +28,7 @@ const scrapeColors = async () => {
 	});
 
 	if (res && date.getFullYear() - new Date(res._lastUpdated).getFullYear() === 0) {
-		Utils.info("DYE-TABLE".yellow, `List for #${res.month} doesn't need update yet.`);
+		App.info("DYE-TABLE".yellow, `List for #${res.month} doesn't need update yet.`);
 		return;
 	}
 
@@ -47,8 +47,8 @@ const scrapeColors = async () => {
 					.replace(new RegExp(/\(.*\)/gi), "")
 					.replace(new RegExp(/ {2,}/g), " ")
 					.trim(),
-				slot: $(tr).children("td").last().text().match(new RegExp(/[ABC]/))?.at(0) || null,
-				code: Number($(tr).children("td").last().text().match(new RegExp(/\d+/))?.at(0) || 0),
+				slot: RegExp(new RegExp(/[ABC]/)).exec($(tr).children("td").last().text())?.at(0) || null,
+				code: Number(RegExp(new RegExp(/\d+/)).exec($(tr).children("td").last().text())?.at(0) || 0),
 			};
 
 			if (temp.name.length === 0) return;
@@ -84,17 +84,17 @@ const scrapeColors = async () => {
 				},
 			}
 		);
-		Utils.info("DYE-TABLE".yellow, `Updated month #${month} dye list.`.green);
+		App.info("DYE-TABLE".yellow, `Updated month #${month} dye list.`.green);
 	} else {
 		await PomdexMonthlyDye.insertOne({
 			_lastUpdated: Date.now(),
 			month,
 			list: monthlyDyeList,
 		});
-		Utils.info("DYE-TABLE".yellow, `Created month #${month} dye list.`.green);
+		App.info("DYE-TABLE".yellow, `Created month #${month} dye list.`.green);
 	}
 };
 
-const taskDailyRefreshDyeTable = () => setInterval(scrapeColors, 86_400_000);
+const taskDailyRefreshDyeTable = () => setInterval(() => scrapeColors, 86_400_000);
 
 export { scrapeColors, taskDailyRefreshDyeTable };

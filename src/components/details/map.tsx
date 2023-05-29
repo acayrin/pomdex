@@ -1,6 +1,6 @@
 import Search from "../../modules/search/query.js";
 import { ToramMap } from "../../modules/types/ToramMap.js";
-import { getItemTypeIcon } from "../../modules/utils/getItemTypeIcon.js";
+import { getItemTypeIcon } from "../../modules/element_funcs/getItemTypeIcon.js";
 
 export const MapDetails = async (props: { item: ToramMap }) => {
 	const { item } = props;

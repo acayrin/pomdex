@@ -2,10 +2,11 @@ import { readFile, stat } from "fs";
 import { Context } from "hono";
 import { join } from "path";
 import { brotliCompress, deflate, gunzip, gzip } from "zlib";
-import Utils from "../../utils/index.js";
+import { App } from "../../app.js";
+import { CachedPage } from "./index.js";
 import { AcceptEncoding } from "./types/AcceptEncoding.js";
 import { AsyncNext } from "./types/AsyncNext.js";
-import { WorkerTasks } from "./WorkerTasks.js";
+import { WorkerTasks } from "./workerTasks.js";
 
 class MainTasks {
 	/**
@@ -19,13 +20,11 @@ class MainTasks {
 		let encodingType: AcceptEncoding;
 
 		if (acceptEncodingHeader) {
-			if (acceptEncodingHeader.match(new RegExp(/gzip/gi))) {
+			if (RegExp(new RegExp(/gzip/gi)).exec(acceptEncodingHeader)) {
 				encodingType = "gzip";
-			}
-			else if (acceptEncodingHeader.match(new RegExp(/deflate/gi))) {
+			} else if (RegExp(new RegExp(/deflate/gi)).exec(acceptEncodingHeader)) {
 				encodingType = "deflate";
-			}
-			else if (acceptEncodingHeader.match(new RegExp(/br/gi))) {
+			} else if (RegExp(new RegExp(/br/gi)).exec(acceptEncodingHeader)) {
 				encodingType = "br";
 			}
 		}
@@ -53,9 +52,9 @@ class MainTasks {
 			return next(null, undefined, acceptEncoding);
 		}
 
-		readFile(join(cacheDirPath, Utils.hash(urlPathname)), (error, file) => {
+		readFile(join(cacheDirPath, CachedPage.hash(urlPathname)), (error, file) => {
 			if (error) {
-				Utils.warn("CACHE".yellow, `E1: ${urlPathname}`, "Possibly first time rendering.");
+				App.warn("CACHE".yellow, `E1: ${urlPathname}`, "Possibly first time rendering.");
 			}
 
 			next(null, file, acceptEncoding);
@@ -101,7 +100,7 @@ class MainTasks {
 				}
 			})
 			.catch((error) => {
-				Utils.error("CACHE".yellow, `E2: ${o.urlPathname}`, error);
+				App.error("CACHE".yellow, `E2: ${o.urlPathname}`, error);
 
 				next(error);
 			});
@@ -120,7 +119,7 @@ class MainTasks {
 		responseOverride: Response;
 		next: AsyncNext;
 	}) {
-		let { context, cachedContent, acceptEncoding, responseOverride, next } = o;
+		const { context, cachedContent, acceptEncoding, responseOverride, next } = o;
 
 		// ignore if response is overidden earlier
 		if (responseOverride) {
@@ -158,7 +157,7 @@ class MainTasks {
 		responseOverride: Response;
 		next: AsyncNext;
 	}) {
-		let { body, contentType, context, acceptEncoding, responseOverride, next } = o;
+		const { body, contentType, context, acceptEncoding, responseOverride, next } = o;
 
 		// ignore if response is overidden earlier
 		if (responseOverride) {
@@ -175,7 +174,7 @@ class MainTasks {
 			if (compress === acceptEncoding) {
 				this.#compression[compress](body, (error: Error, buffer: Buffer) => {
 					if (error) {
-						Utils.error("CACHE".yellow, `E4: ${acceptEncoding}.`, "Failed to compress.", error);
+						App.error("CACHE".yellow, `E4: ${acceptEncoding}.`, "Failed to compress.", error);
 					} else {
 						context.res.headers.append("Content-Encoding", compress);
 					}
@@ -202,7 +201,7 @@ class MainTasks {
 	static taskFinalizeResponse(o: { response: Response; urlPathname: string; cacheDirPath: string; next: AsyncNext }) {
 		const { response, urlPathname, cacheDirPath, next } = o;
 
-		stat(join(cacheDirPath, Utils.hash(urlPathname)), (error, stats) => {
+		stat(join(cacheDirPath, CachedPage.hash(urlPathname)), (error, stats) => {
 			response.headers.append("Last-Modified", new Date(error ? Date.now() : stats.mtimeMs).toUTCString());
 
 			next(null, response);

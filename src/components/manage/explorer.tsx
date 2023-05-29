@@ -1,7 +1,7 @@
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { Precompile } from "../../modules/precompile/index.js";
-import { Helmet } from "../_base/helmet.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const BaseManageList = () => (
@@ -313,6 +313,7 @@ export const BaseManageList = () => (
 			</div>
 			<div class="explorer-option-toggle-container input-field col s2">
 				<a
+					href="##"
 					id="explorer-option-toggle"
 					class="btn-floating btn-large waves-effect waves-light animate">
 					<iconify-icon

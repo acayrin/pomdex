@@ -7,36 +7,39 @@
 	const inputPassword = document.getElementById("login_password") as HTMLInputElement;
 
 	btnSubmit.classList.remove("disabled");
-	btnSubmit.addEventListener("click", async () => {
+	btnSubmit.addEventListener("click", () => {
 		btnSubmit.classList.add("disabled");
 
-		fetch("/api/user/login", {
-			method: "POST",
-			body: JSON.stringify({
-				username: inputUsername.value,
-				// @ts-ignore
-				password: await getSHA256Hash(inputPassword.value),
-			}),
-		})
-			.then((res) => res.json())
-			.then((message: MessageResponse) => {
-				if (message.status !== 200) {
-					displayMessage(message.message);
-					return;
-				}
-
-				if (!window.localStorage) {
-					displayMessage("LocalStorage is not supported by your browser");
-					return;
-				}
-
-				window.location.href = "/";
+		// @ts-ignore
+		getSHA256Hash(inputPassword.value).then((hashedPassword: string) => {
+			fetch("/api/user/login", {
+				method: "POST",
+				body: JSON.stringify({
+					username: inputUsername.value,
+					// @ts-ignore
+					password: hashedPassword,
+				}),
 			})
-			.catch((err) => {
-				displayMessage("An error has occured");
+				.then((res) => res.json())
+				.then((message: MessageResponse) => {
+					if (message.status !== 200) {
+						displayMessage(message.message);
+						return;
+					}
 
-				console.error(err);
-			});
+					if (!window.localStorage) {
+						displayMessage("LocalStorage is not supported by your browser");
+						return;
+					}
+
+					window.location.href = "/";
+				})
+				.catch((err) => {
+					displayMessage("An error has occured");
+
+					console.error(err);
+				});
+		});
 	});
 
 	const displayMessage = (message: string) => {

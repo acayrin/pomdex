@@ -1,8 +1,8 @@
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { Precompile } from "../../modules/precompile/index.js";
 import { Account } from "../../modules/types/Account.js";
-import { Helmet } from "../_base/helmet.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const BaseAccountInfo = (props: { account: Account }) => {

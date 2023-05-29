@@ -1,0 +1,148 @@
+@import "./config.scss";
+@import url("https://api.fonts.coollabs.io/css2?family=Rajdhani&display=swap");
+
+*:not(td) {
+	border-radius: 8px !important;
+}
+
+html {
+	background : var(--color-dark-darken);
+	font-family: Radjhani, Arial, Helvetica, sans-serif;
+	color      : var(--color-light);
+}
+
+a {
+	color: var(--color-accent)
+}
+
+pre {
+	display   : block;
+	overflow  : auto;
+	max-height: 200px;
+	padding   : 12px;
+	background: var(--color-dark-darken);
+}
+
+code {
+	color: var(--color-red);
+}
+
+table {
+	border-radius: 4px;
+
+	tr {
+		td {
+			padding: 1rem .4rem;
+		}
+
+		&:first-child {
+			td:first-child {
+				border-top-left-radius: 4px !important;
+			}
+
+			td:last-child {
+				border-top-right-radius: 4px !important;
+			}
+		}
+
+		&:last-child {
+			td:first-child {
+				border-bottom-left-radius: 4px !important;
+			}
+
+			td:last-child {
+				border-bottom-right-radius: 4px !important;
+			}
+		}
+	}
+
+	&.striped tbody tr:nth-child(odd) {
+		background-color: transparent;
+
+		td {
+			background-color: var(--color-dark-lighten);
+		}
+	}
+}
+
+.card {
+	background: var(--color-dark);
+
+	.card-content {
+		color: var(--color-light);
+	}
+
+	.card-action {
+		color: var(--color-light);
+
+		a {
+			color: var(--color-light);
+		}
+	}
+}
+
+.collapsible {
+	margin: 0;
+
+	.collapsible-body {
+		margin-left: 1rem;
+		padding    : 0 !important;
+	}
+
+	li.active {
+		border-right: 1px solid var(--color-accent);
+
+		&>.collapsible-header:first-child {
+			b {
+				color: var(--color-accent);
+			}
+		}
+	}
+
+	.collapsible-header {
+		transition: background .2s, color .2s;
+		background: var(--color-dark-lighten);
+		color     : var(--color-light);
+
+		b {
+			transition: color .2s;
+		}
+
+		&:hover {
+			background-color: var(--color-dark);
+		}
+	}
+}
+
+.collapsible,
+.collapsible-header,
+.collapsible-body {
+	box-shadow   : none;
+	border       : none !important;
+	border-radius: 0 !important;
+}
+
+.hidden {
+	display: none;
+}
+
+.input-field {
+	margin: 0.65rem;
+}
+
+.animate {
+	transition: all .3s ease !important;
+}
+
+.hoverable {
+	transition: all .3s ease;
+	border    : 1px solid transparent;
+
+	&:hover {
+		border: 1px solid var(--color-accent);
+	}
+}
+
+svg {
+	margin-right: .3em;
+}

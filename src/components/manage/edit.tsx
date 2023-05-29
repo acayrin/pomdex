@@ -1,12 +1,12 @@
 import { html } from "hono/html";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Helmet } from "../../modules/helmet/helmet.js";
 import { Precompile } from "../../modules/precompile/index.js";
 import { ToramItem } from "../../modules/types/ToramItem.js";
 import { ToramMap } from "../../modules/types/ToramMap.js";
 import { ToramMonster } from "../../modules/types/ToramMonster.js";
 import { ToramObject } from "../../modules/types/ToramObject.js";
-import { Helmet } from "../_base/helmet.js";
 import { ManageEditItem } from "./edit/item.js";
 import { ManageEditMap } from "./edit/map.js";
 import { ManageEditMonster } from "./edit/monster.js";
@@ -85,12 +85,17 @@ export const BaseManageEdit = (props: { entry?: ToramObject }) => {
 								{ToramEntryType.map((type) =>
 									entry?.type === type ? (
 										<option
+											key={type}
 											value={type}
 											selected>
 											{type}
 										</option>
 									) : (
-										<option value={type}>{type}</option>
+										<option
+											key={type}
+											value={type}>
+											{type}
+										</option>
 									)
 								)}
 							</select>
@@ -98,8 +103,10 @@ export const BaseManageEdit = (props: { entry?: ToramObject }) => {
 					</div>
 					<div id="edit_body">
 						{entry.type === "Map" && <ManageEditMap entry={entry as ToramMap} />}
-						{(entry as ToramMonster).level && <ManageEditMonster entry={entry as ToramMonster} />}
-						{(entry as ToramItem).stats && <ManageEditItem entry={entry as ToramItem} />}
+						{(entry as ToramMonster).level !== undefined && (
+							<ManageEditMonster entry={entry as ToramMonster} />
+						)}
+						{(entry as ToramItem).stats !== undefined && <ManageEditItem entry={entry as ToramItem} />}
 					</div>
 					<div class="row">
 						<div

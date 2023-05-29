@@ -113,7 +113,8 @@ import { ToramMonster } from "../../../../modules/types/ToramMonster.js";
 				.then((res) => {
 					alert(res.message);
 					if (res.error) console.error(res.error);
-				});
+				})
+				.catch(console.error);
 		}
 	}
 
@@ -126,7 +127,7 @@ import { ToramMonster } from "../../../../modules/types/ToramMonster.js";
 				explorerData.searchTypeFilter.splice(index, 1);
 			}
 
-			explorerSendSearchRequest();
+			explorerSendSearchRequest().catch(console.error);
 		};
 	}
 
@@ -138,7 +139,7 @@ import { ToramMonster } from "../../../../modules/types/ToramMonster.js";
 					explorerData.explorer.clientHeight
 			) < 1
 		) {
-			explorerLoadMore();
+			explorerLoadMore().catch(console.error);
 		}
 	};
 
@@ -148,10 +149,9 @@ import { ToramMonster } from "../../../../modules/types/ToramMonster.js";
 			if (explorerData.search.value.length === 0) {
 				explorerData.searchQuery = "*";
 			}
-			explorerSendSearchRequest();
+			explorerSendSearchRequest().catch(console.error);
 		}, 500);
 	};
-
 
 	explorerData.panel.classList.toggle("active");
 	explorerData.panel.style.display = "inline-block";
@@ -159,5 +159,5 @@ import { ToramMonster } from "../../../../modules/types/ToramMonster.js";
 		explorerData.toggle.classList.toggle("active");
 		explorerData.panel.classList.toggle("active");
 	};
-	explorerSendSearchRequest();
+	explorerSendSearchRequest().catch(console.error);
 }

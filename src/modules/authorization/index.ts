@@ -13,7 +13,7 @@ const respond = (c: Context, redirect = false) =>
 				403
 		  );
 
-const taskGetAccountType = (c: Context, next: (error: Error, ...args: any) => void) => {
+const taskGetAccountType = (c: Context, next: (error: Error, ...args: unknown[]) => void) => {
 	PomdexAccounts.findOne({
 		token: c.req.cookie("pomdexAccount"),
 	})
@@ -21,7 +21,7 @@ const taskGetAccountType = (c: Context, next: (error: Error, ...args: any) => vo
 		.catch(next);
 };
 
-const taskGetRouteReponse = (c: Context, fn: Promise<unknown>, next: (error: Error, ...args: any) => void) => {
+const taskGetRouteReponse = (c: Context, fn: Promise<unknown>, next: (error: Error, ...args: unknown[]) => void) => {
 	// Do work here
 	fn.then((data) => next(null, data)).catch((error) =>
 		next(
@@ -29,7 +29,7 @@ const taskGetRouteReponse = (c: Context, fn: Promise<unknown>, next: (error: Err
 			c.json(
 				{
 					status: 500,
-					message: `Internal server error`,
+					message: "Internal server error",
 					error,
 				},
 				500
@@ -43,8 +43,8 @@ const manageAuthorization = (c: Context, fn: Promise<unknown>, o?: { adminOnly?:
 		if (c.req.cookie("pomdexAccount")) {
 			async.parallel(
 				[
-					(next: (error: Error, ...args: any) => void) => taskGetAccountType(c, next),
-					(next: (error: Error, ...args: any) => void) => taskGetRouteReponse(c, fn, next),
+					(next: (error: Error, ...args: unknown[]) => void) => taskGetAccountType(c, next),
+					(next: (error: Error, ...args: unknown[]) => void) => taskGetRouteReponse(c, fn, next),
 				],
 				(error, responses: Response[]) => {
 					if (error) {

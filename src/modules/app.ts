@@ -1,18 +1,33 @@
 import { serve } from "@hono/node-server";
 import async from "async";
 import "colors";
+import { readdirSync, statSync } from "fs";
 import { Context, Env, Hono, Next } from "hono";
 import ky from "ky";
 import { cpus } from "os";
 import { basename, dirname, join } from "path";
 import { fileURLToPath } from "url";
-import Utils from "../modules/utils/index.js";
 import { PomdexCollection } from "./database/index.js";
-import CachedPage from "./middleware/cacher/index.js";
+import { CachedPage } from "./middleware/index.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 class App extends Hono {
 	static readonly MaxConcurrency = Number(process.env.MAX_CONCURRENCY) || cpus().length - 1;
+
+	static info = (...args: unknown[]) => process.stdout.write(`${new Date().toISOString().grey} ${args.join(" ")}\n`);
+	static error = (...args: unknown[]) => {
+		const errorIndex = args.findIndex((arg) => arg instanceof Error);
+		let errorObject: Error;
+
+		if (errorIndex !== -1) {
+			errorObject = args.splice(errorIndex, 1)[0] as Error;
+		}
+
+		process.stdout.write(`${new Date().toISOString().red} ${args.join(" ")}\n`);
+		errorObject && console.error(errorObject);
+	};
+	static warn = (...args: unknown[]) =>
+		process.stdout.write(`${new Date().toISOString().yellow} ${args.join(" ")}\n`);
 
 	readonly froutes = new Map<string, (c: Context) => Promise<Response>>();
 	#runTaskBefore: Function[] = [];
@@ -23,7 +38,7 @@ class App extends Hono {
 	};
 
 	constructor(opts?: {
-		honoOptions?: Partial<Pick<Hono<Env, {}, "">, "router" | "strict">>;
+		honoOptions?: Partial<Pick<Hono<Env, {}, "/">, "router" | "getPath"> & { strict: boolean }>;
 		appOptions?: {
 			port?: string | number;
 		};
@@ -37,10 +52,10 @@ class App extends Hono {
 
 	// [ Start server on PORT ] ========================================================================
 	async serve() {
-		Utils.info(`Starting with max concurrency tasks: ${App.MaxConcurrency}`.green);
+		App.info(`Starting with max concurrency tasks: ${App.MaxConcurrency}`.green);
 
 		// Wait for all tasks to complete
-		Utils.info("Waiting for all tasks to complete...".yellow);
+		App.info("Waiting for all tasks to complete...".yellow);
 		for (const task of this.#runTaskBefore) await task(this);
 
 		// Load routes
@@ -54,18 +69,18 @@ class App extends Hono {
 		});
 
 		// Finishing up
-		Utils.info("Server started on port".green, (this.appOptions?.port?.toString() || "8080").blue);
+		App.info("Server started on port".green, (this.appOptions?.port?.toString() || "8080").blue);
 
 		// Running after tasks
-		Utils.info("Running post tasks...".yellow);
-		Promise.all(this.#runTaskAfter.map((task) => task(this)));
+		App.info("Running post tasks...".yellow);
+		Promise.all(this.#runTaskAfter.map((task) => task(this))).catch(console.error);
 	}
 
 	// [ Load routes ] =================================================================================
 	#loadRoutes = () =>
-		Utils.recursiveLookup(join(__dirname, "../routes/"), async (file) => {
+		recursiveLookup(join(__dirname, "../pages/"), async (file) => {
 			let path = file
-				.replace(join(__dirname, "../routes/"), "")
+				.replace(join(__dirname, "../pages/"), "")
 				.replace(/(\.tsx)|(\.ts)|(\.js)/gi, "")
 				.replace(/\$/gi, ":")
 				.replace(/(index)|(_)/gi, "")
@@ -86,7 +101,7 @@ class App extends Hono {
 			this.froutes.set(path, (await import(file)).default);
 			this[reqType](path, (await import(file)).default);
 
-			Utils.info("Route", reqType.toUpperCase().yellow, path.cyan, "->", file.cyan);
+			App.info("Route", reqType.toUpperCase().yellow, path.cyan, "->", file.cyan);
 		});
 
 	// [ Run tasks after serve ] ==========================================================================
@@ -124,18 +139,29 @@ class App extends Hono {
 						})
 							.then(() => error())
 							.catch(() => {
-								workQueue.push(id);
+								workQueue.push(id).catch(console.error);
 								error();
 							});
 					}, App.MaxConcurrency);
 
-					for (const entry of list) workQueue.push(entry.id);
+					for (const entry of list) workQueue.push(entry.id).catch(console.error);
 					workQueue.drain(() => {
 						workQueue.kill();
 						res(undefined);
 					});
-				});
+				})
+				.catch(console.error);
 		});
 }
+
+const recursiveLookup = async (path: string, callback: (path: string) => Promise<unknown>): Promise<void> => {
+	for (const name of readdirSync(path)) {
+		if (statSync(`${path}/${name}`).isDirectory()) {
+			await recursiveLookup(`${path}/${name}`, callback);
+		} else {
+			await callback(`${path}/${name}`);
+		}
+	}
+};
 
 export { App };
