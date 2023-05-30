@@ -92,8 +92,8 @@ export default class Search {
 
 		// create a result cursor
 		const cursor = PomdexCollection.find(queryCondition)
-			.limit(searchOptions.limit > 0 ? searchOptions.limit : 50)
-			.skip(searchOptions.page * 50);
+			.limit(searchOptions.limit || 50)
+			.skip(searchOptions.page * (searchOptions.limit || 50));
 		if (queryCondition.$text) {
 			// if condition is name based, sort by name first then id
 			cursor.sort({ score: { $meta: "textScore" }, _id: 1 });
