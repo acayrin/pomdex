@@ -1,3 +1,5 @@
+## Inactive due to lack of interest in the game
+
 # pomdex
 
 ### a web app for Toram Online
